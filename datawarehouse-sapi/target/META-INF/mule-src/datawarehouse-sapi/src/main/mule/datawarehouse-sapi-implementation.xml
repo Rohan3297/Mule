@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:batch="http://www.mulesoft.org/schema/mule/batch"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<flow name="postSingleRecord" doc:id="f0e4bb55-3bfd-4e5b-92b6-d1916621968e" >
+		<logger level="INFO" doc:name="Logger" doc:id="e34a020d-9834-4651-b38c-7236bfaf140d" />
+		<db:insert doc:name="Insert" doc:id="13fb5afe-7e76-47e6-8fd7-16ef54e1349d" config-ref="Database_Config">
+			<db:sql ><![CDATA[insert into DatawareHouse_Orders(source,orderId,customerId,customerName,orderStatus,carrierId,orderReceivedDate,orderFulfillmentDate,productId,quantity,amount,cDate)
+values(:source,:orderId,:customerId,:customerName,:orderStatus,:carrierId,:orderReceivedDate,:orderFulfillmentDate,:productId,:quantity,:amount,:cDate)]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	source:payload.source,
+	orderId:payload.orderId,
+	customerId:payload.customerId default null,
+	customerName:payload.customerName default null,
+	orderStatus:payload.orderStatus default null,
+	carrierId:payload.carrierId default null,
+	orderReceivedDate:payload.orderReceivedDate default null,
+	orderFulfillmentDate:payload.orderFulfillmentDate default null,
+	productId:payload.productId default null,
+	quantity:payload.quantity default null,
+	amount:payload.amount default null,
+	cDate: now() as String {format: "uuuu-MM-dd"}
+}]]]></db:input-parameters>
+		</db:insert>
+		<choice doc:name="Choice" doc:id="35b9b930-1d92-4a0d-a47d-e382589dd5bd">
+			<when expression="#[payload.affectedRows==1]">
+				<ee:transform doc:name="Transform Message" doc:id="7b604690-d65a-4b0e-8642-b726a0892731">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message:"Data inserted successfully"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</when>
+			<otherwise>
+				<raise-error doc:name="Raise error" doc:id="008c6680-5c78-4750-a077-ee74e107eda9" type="DATA:NOT_INSERT" />
+			</otherwise>
+		</choice>
+		<ee:transform doc:name="Transform Message" doc:id="8418ec03-34fb-40d1-a35f-24295949a933">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload
+]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="8dd9735e-bc75-4b67-8c4f-3ab9f5529641" />
+		<error-handler>
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="87626b28-7df8-47a9-80bc-e9eb39a64dec" type="DATA:NOT_INSERT">
+				<ee:transform doc:name="Transform Message" doc:id="20729b83-1d39-4191-bfcb-ff258c742451" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message: error.description
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</on-error-continue>
+		</error-handler>
+	</flow>
+	<flow name="postBulkRcords" doc:id="faefc870-a25b-4cd5-aa60-f5f9bcf30f48" >
+		<logger level="INFO" doc:name="Logger" doc:id="a21a9b74-b342-4bcf-8975-5a7ddba988c3" />
+		<parallel-foreach doc:name="Parallel For Each" doc:id="3bf6b152-5f72-4e07-84f5-2b623a51ebd1" collection="#[payload]">
+			<db:insert doc:name="Insert" doc:id="f8479ce4-b9ae-4b3f-9cb0-c2834f675bac" config-ref="Database_Config">
+						<db:sql><![CDATA[insert into DatawareHouse_Orders(source,orderId,customerId,customerName,orderStatus,carrierId,orderReceivedDate,orderFulfillmentDate,productId,quantity,amount,cDate)
+values(:source,:orderId,:customerId,:customerName,:orderStatus,:carrierId,:orderReceivedDate,:orderFulfillmentDate,:productId,:quantity,:amount,:cDate)]]></db:sql>
+						<db:input-parameters><![CDATA[#[{
+	source:payload.source,
+	orderId:payload.orderId,
+	customerId:payload.customerId default null,
+	customerName:payload.customerName default null,
+	orderStatus:payload.orderStatus default null,
+	carrierId:payload.carrierId default null,
+	orderReceivedDate:payload.orderReceivedDate default null,
+	orderFulfillmentDate:payload.orderFulfillmentDate default null,
+	productId:payload.productId default null,
+	quantity:payload.quantity default null,
+	amount:payload.amount default null,
+	cDate: now() as String {format: "uuuu-MM-dd"}
+}]]]></db:input-parameters>
+					</db:insert>
+			<choice doc:name="Choice" doc:id="bc9e3d83-b239-4ba6-808f-c95ff7aa694d">
+						<when expression="#[payload.affectedRows==1]">
+							<ee:transform doc:name="Transform Message" doc:id="bb769cfc-c8e4-4fda-83d1-29bee248854f">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message:"Data inserted successfully"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+						</when>
+						<otherwise>
+							<raise-error doc:name="Raise error" doc:id="eddf38a3-f49b-4a0a-82a4-d354cf470f31" type="DATA:NOT_INSERT" />
+						</otherwise>
+					</choice>
+		</parallel-foreach>
+		<ee:transform doc:name="Transform Message" doc:id="9cf19ea3-3059-47eb-b4ac-af331cb956f3" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message:"Data inserted successfully"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="96744046-9615-4c43-b4e4-8fa39e8c2852" type="DATA:NOT_INSERT">
+				<ee:transform doc:name="Transform Message" doc:id="f8ff0d4b-8fc6-4365-8d9a-a73d6da7c77c" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message:error.description
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</on-error-continue>
+		</error-handler>
+	</flow>
+</mule>

@@ -1,0 +1,892 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:salesforce-composite="http://www.mulesoft.org/schema/mule/salesforce-composite" xmlns:java="http://www.mulesoft.org/schema/mule/java"
+	xmlns:jms="http://www.mulesoft.org/schema/mule/jms"
+	xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd
+http://www.mulesoft.org/schema/mule/java http://www.mulesoft.org/schema/mule/java/current/mule-java.xsd
+http://www.mulesoft.org/schema/mule/salesforce-composite http://www.mulesoft.org/schema/mule/salesforce-composite/current/mule-salesforce-composite.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="9bd18cae-1a58-4586-ac50-2c3a00354ce8" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="e834628f-df5f-40ad-add2-87742ffdb638" >
+		<db:my-sql-connection host="remotemysql.com" port="3306" user="1lAIHXc8Va" password="TEMA3CTgGO" database="1lAIHXc8Va"/>
+	</db:config>
+	<salesforce:sfdc-config name="Salesforce_Config" doc:name="Salesforce Config" doc:id="c7cfb50b-e49e-4cd9-8486-b60fb3da5e40" >
+		<salesforce:basic-connection username="rohan@atdev.com" password="19ikEBRo" securityToken="Z4X4Nsf2chz6wojbkm7Q2FQF"/>
+	</salesforce:sfdc-config>
+	<db:config name="Database_Cofig_local" doc:name="Database Config" doc:id="5eb55cd4-bb1a-4bd6-9bb5-dd5493abd2bd" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" database="ADDRESS" />
+	</db:config>
+	<file:config name="File_Config" doc:name="File Config" doc:id="105047f1-e023-495e-8144-e6960c938333" >
+		<file:connection workingDir="D:\Batch" />
+	</file:config>
+	<jms:config name="JMS_Config" doc:name="JMS Config" doc:id="50d256b0-7da5-44fb-88f4-27b4766d3d20" >
+		<jms:active-mq-connection username="admin" password="admin">
+			<jms:factory-configuration brokerUrl="tcp://DESKTOP-LQ7CK24:61616" />
+		</jms:active-mq-connection>
+	</jms:config>
+	<salesforce-composite:composite-config name="Salesforce_Composite_Config" doc:name="Salesforce Composite Config" doc:id="ab74b2e0-b71a-4ab9-8319-df80a7852a8a" >
+		<salesforce-composite:oauth-user-pass-connection consumerKey="3MVG9fe4g9fhX0E56oF3xUPBuS9h2sSAcs14.oSNICyn9k8BzDWZetGd9DxKUh3hZC7nI2NGa2wKuBgok2w0l" consumerSecret="EA00CCF5889E29F54E9E7378ABFC5987EDF215EA94640AE1EFCE2A67FB6BE2C2" username="rohan@atdev.com" password="19ikEBRo" securityToken="Z4X4Nsf2chz6wojbkm7Q2FQF"/>
+	</salesforce-composite:composite-config>
+	<flow name="dataweave-basisFlow" doc:id="89308d22-0934-4fdc-88cf-08776f581b40" >
+		<http:listener doc:name="/dataweave" doc:id="2c4ac782-2826-41bc-8ac5-ef5a09db428f" config-ref="HTTP_Listener_config" path="/dataweave"/>
+		<choice doc:name="Choice" doc:id="efce91a5-a4ec-4cf6-9dc9-dfb27f0591c7" >
+			<when expression='#[attributes.queryString == "ex1"]'>
+				<ee:transform doc:name="String concat" doc:id="d16ff5e3-8bd1-4f5a-b637-b0f40a697da6">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{ myString: ("hello" ++ "Rohan") }]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</when>
+			<when expression='attributes.queryString == "ex1.2"'>
+				<ee:transform doc:name="array concat" doc:id="0f594788-3175-49fd-90dd-a8bc14d83dd3">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+[2,424,54,86,2,"rohan"] ++ [34,35,32,"naik",234]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</when>
+			<when expression='attributes.queryString == "ex2"'>
+				<ee:transform doc:name="JSON to XML" doc:id="31683c4c-f26f-43cf-b7ab-5179bd016288">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/xml
+---
+{ "myString" : ("helloWorld") }]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</when>
+			<when expression='attributes.queryString == "ex3"'>
+				<ee:transform doc:name="Supported Data Types" doc:id="07bb50e4-827a-49a0-8e46-15c027fabbfe">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  /*
+   * A multi-line
+   * comment here.
+   */
+  myString: "hello world",
+  myNumber: 123,
+  myFloatingPointNumber: 123.456,
+  myVeryBigNumber: 12341234134123412341234123,
+  myDate: |2018-12-07|,
+  myTime: |11:55:56|,
+  myDateTime: |2018-10-01T23:57:59-03:00|,
+  myBoolean: true,
+  myArray: [ 1, 2, 3, 5, 8],
+  myMixedArray: [ 1, 2, "blah", { hello: "there" } ],
+  myObjectKeyValuePair: { innerKey: "innerValue" },
+  myObjectWithConditionalField: { a : { b : 1, ( c : 2 ) if true, (d : 4) if false } },
+  myNull: null,
+  myBinary: "abcd1234123" as Binary
+  //A one-line comment here.
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</when>
+			<when expression='attributes.queryString == "ex4"'>
+				<ee:transform doc:name="Use a DataWeave Variable as Input" doc:id="155df030-2bb1-4eb0-9905-52dbebbfb87f">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+var myJson = { "hello" : "world" }
+output application/json
+---
+myJson]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</when>
+			<when expression='attributes.queryString == "ex5"'>
+				<ee:transform doc:name="Use a DataWeave Function in a DataWeave Variable" doc:id="a96e0e1d-e5e2-47db-9242-31d676cf425e">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+var myJson = {
+  a: avg([1, 1000]),
+  b: avg([1, 2, 3])
+}
+output application/json
+---
+myJson]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</when>
+			<when expression='attributes.queryString == "ex6"'>
+				<ee:transform doc:name="Read, Transform, and Select Content from an Input" doc:id="d3695c0b-c7ce-4cd2-9e99-0610f78e4ded">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+var myRead = read("<car><color>red</color></car>",
+                "application/xml")
+output application/json
+---
+{
+  mySelection : myRead.car
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</when>
+			<when expression='attributes.queryString == "ex7"'>
+				<ee:transform doc:name="Read File Contents with a DataWeave Function" doc:id="816ad42a-f5ca-428e-aea2-37463e0a5b83">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+readUrl("classpath://myJson.json", "application/json")]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</when>
+			<when expression='attributes.queryString == "ex8"'>
+				<ee:transform doc:name="Map Elements from an Array into an Object" doc:id="81e16806-a28b-4c51-8014-e8abdebc8b8b">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  (
+    ["a", "b", "c"] map ((value, index) -> {
+        (index): value
+    })
+  )
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</when>
+			<when expression='attributes.queryString == "ex9"'>
+				<ee:transform doc:name="Pluck Values from an Object into an Array" doc:id="3a8f2aa8-0c0b-4899-9bf4-dc7d35c9b8fc">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  "0": "a",
+  "1": "b",
+  "2": "c"
+} pluck ((value) -> value)]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</when>
+			<when expression='attributes.queryString == "ex10"'>
+				<ee:transform doc:name="Map and Merge Fields" doc:id="735e1582-3bb6-4111-a084-bc719299d333">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+var myVar = [
+  { bookId: 101,
+    title: "world history",
+    price: "19.99"
+  },
+  {
+    bookId: 202,
+    title: 'the great outdoors',
+    price: "15.99"
+  }
+]
+var myVar2 = [
+  {
+    bookId: 101,
+    author: "john doe"
+  },
+  {
+    bookId: 202,
+    author: "jane doe"
+  }
+]
+output application/json
+---
+myVar map (item, index) -> using (id = item.bookId) {
+	"id" : id,
+	"topic" : item.title,
+	"cost" : item.price as Number,
+	(myVar2 filter ($.*bookId contains id) map (item) -> {
+		author : item.author
+	})
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="Logger" doc:id="7e580532-e35b-406f-8e77-7bcf672423e2" message="Query String Taak"/>
+			</otherwise>
+		</choice>
+	</flow>
+	<flow name="dataweave-basisFlow25" doc:id="7a3bdc75-189d-498c-a5f9-e38e94272e7e" >
+		<http:listener doc:name="/jsontojson" doc:id="39f5ab1b-965f-4e0a-bb8c-3c53458826e2" config-ref="HTTP_Listener_config" path="/jsontojson"/>
+		<ee:transform doc:name="Transform Message" doc:id="309a5e0f-3717-4371-b37b-95c8251f0240" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+    address: payload.address1,
+    Province: payload.city,
+    country: payload.country,
+    First_Name: payload.name,
+    Code: payload.postalCode,
+    stateOrProvince: payload.stateOrProvince
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="ddb4cfd2-5498-4099-8c10-abf0e7ce61f1" />
+	</flow>
+	<flow name="dataweave-basisFlow1" doc:id="4cbaa284-8522-4652-a5fc-04d9665153d7" >
+		<http:listener doc:name="/jsontoxml" doc:id="875b9954-9ec9-4d31-bddc-e7e2bcb18ba3" config-ref="HTTP_Listener_config" path="/jsontoxml"/>
+		<ee:transform doc:name="Transform Message" doc:id="5dba3094-cab8-442c-bc52-bd8082c5dab3">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/xml
+---
+/*{
+	users: payload
+}*/
+{
+    root:{
+        address1: payload.address1,
+        city: payload.city,
+        country: payload.country,
+        email: payload.email,
+        name: payload.name,
+        postalCode @(code: payload.postalCode): payload.stateOrProvince
+    }
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="1edb186a-9eae-4474-8769-0b048a9fc3bc" />
+	</flow>
+	<flow name="dataweave-basisFlow2" doc:id="aa0adc8e-21ac-4940-9b92-ae2156f7cb21" >
+		<http:listener doc:name="/jsontocsv" doc:id="718be452-dc4d-4a6d-8ff4-0f96e6ebf754" config-ref="HTTP_Listener_config" path="/jsontocsv"/>
+		<ee:transform doc:name="skipNullValue" doc:id="dbaf49ca-8a91-4509-9098-7582bcacde18" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json skipNullOn="everywhere"
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="Json to CSV" doc:id="6fa735fe-4ec0-4ccf-ae1e-3a0b710d1176" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/csv header = false
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="f232c199-805e-4fd4-8bff-0fe9b47c7c4f" />
+	</flow>
+	<flow name="dataweave-basisFlow3" doc:id="1afd2fa8-50ed-4d26-b69c-3abc425663a6" >
+		<http:listener doc:name="/jsontodb" doc:id="cb771177-5142-4417-87ee-047cb7a278a7" config-ref="HTTP_Listener_config" path="/jsontodb"/>
+		<db:insert doc:name="Insert" doc:id="b757176c-5090-43ee-a02c-f79f9d903a51" config-ref="Database_Config">
+			<db:sql ><![CDATA[insert into ADDRESS(address1,city,country,email,name,code,state) values(:address1,:city,:country,:email,:name,:code,:state)]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	address1: payload.address1,
+	city: payload.city,
+	country: payload.country,
+	email: payload.email,
+	name: payload.name,
+	code: payload.postalCode,
+	state: payload.stateOrProvince
+}]]]></db:input-parameters>
+		</db:insert>
+		<logger level="INFO" doc:name="Logger" doc:id="86fae543-a91e-43d7-8db2-d1dff78a317e" />
+		<ee:transform doc:name="Transform Message" doc:id="8e4ac053-282d-4924-af9b-a350d72d7c60" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Inserted"} ]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="dataweave-basisFlow4" doc:id="268c8d2f-1ada-4540-95ac-cbff39cb06ba" >
+		<http:listener doc:name="/jsontojava" doc:id="64294498-967b-4de2-b795-e8a5e30bfc91" config-ref="HTTP_Listener_config" path="/jsontojava"/>
+		<ee:transform doc:name="JSON to JAVA" doc:id="8f01e891-44ad-401c-bf56-360a31fb628e" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload map ((item, index) -> 
+{
+    firstName: ((item.name default "") splitBy(' '))[0],
+    lastName: ((item.name default "") splitBy(' '))[1],
+    email: item.email,
+    phone: item.phone
+})]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<java:new doc:name="New" doc:id="5b8d581f-adfb-46f1-938b-b23be8f2ec8f" class="student" constructor="student(java.lang.String,java.lang.String,java.lang.String,java.lang.String)">
+			<java:args ><![CDATA[#[{
+    firstName: payload.firstName,
+    lastName: payload.lastName,
+    email: payload.email,
+    phone: payload.phone    
+}]]]></java:args>
+		</java:new>
+		<logger level="INFO" doc:name="Logger" doc:id="cb3723d6-cc37-4f76-b579-e73fec86f9ff" message="#[payload]"/>
+	</flow>
+	<flow name="dataweave-basisFlow5" doc:id="129ae32a-5190-4c1c-b984-27eac768caa0" >
+		<http:listener doc:name="/xmltoxml" doc:id="7e6e6ccf-dd02-455e-8b14-110ae4af0ff5" config-ref="HTTP_Listener_config" path="/xmltoxml"/>
+		<ee:transform doc:name="XML to XML" doc:id="1634f7d2-c0bd-4638-9cf1-15404fe5fd8c" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml
+---
+payload mapObject ((value, key, index) -> 
+(key): value)]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="ad047323-4d10-4523-afa1-eb6668212493" />
+	</flow>
+	<flow name="dataweave-basisFlow6" doc:id="65a56d78-7065-4964-ac27-055ba5791038" >
+		<http:listener doc:name="/xmltojson" doc:id="ab1ef003-6f82-475e-9053-5f55b352183d" config-ref="HTTP_Listener_config" path="/xmltojson"/>
+		<ee:transform doc:name="xml to json" doc:id="3ca3062c-04f5-4d66-83cb-e04b9fc84022" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload mapObject ((value, key, index) -> {
+    address1: value.address1,
+    city: value.city,
+    country: value.country,
+    email: value.email,
+    name: value.name,
+    postalCode: value.postalCode,
+    stateOrProvince : value.stateOrProvince
+})]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="60cd7221-7abc-45e3-ba85-3df08d296a8e" />
+	</flow>
+	<flow name="dataweave-basisFlow7" doc:id="223c4231-f339-4dc4-8082-e5c833b7c5ac" >
+		<http:listener doc:name="/xmltocsv" doc:id="8159c79b-0ec2-4ec8-aaf8-4708472ef1b6" config-ref="HTTP_Listener_config" path="/xmltocsv"/>
+		<ee:transform doc:name="XML to CSV" doc:id="7818d1e7-0909-4cc5-b7e1-f647733f51c3" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/csv
+---
+payload mapObject ((value, key, index) -> {
+    address1: value.address1,
+    city: value.city,
+    country: value.country,
+    email: value.email,
+    name: value.name,
+    postalCode: value.postalCode,
+    stateOrProvince : value.stateOrProvince
+})]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="9059164b-36a1-4076-b139-fdaf075173fb" />
+	</flow>
+	<flow name="Copy_of_dataweave-basisFlow" doc:id="6a06f067-5b3f-4d45-a081-2c9e6f638f21" >
+		<http:listener doc:name="xmltodb" doc:id="3cf627b6-df9e-4c2b-a61e-a20d6e30c90e" config-ref="HTTP_Listener_config" path="/xmltodb" />
+		<db:insert doc:name="insert" doc:id="af40cf12-60f3-4694-b865-6891ff1a85fe" config-ref="Database_Config" >
+			<db:sql ><![CDATA[insert into ADDRESS(address1,city,country,email,name,postalCode,stateOrProvince) values(:address1,:city,:country,:email,:name,:postalCode,:stateOrProvince)]]></db:sql>
+			<db:input-parameters ><![CDATA[#[payload mapObject ((value, key, index) -> {
+    address1: value.address1,
+    city: value.city,
+    country: value.country,
+    email: value.email,
+    name: value.name,
+    postalCode: value.postalCode,
+    stateOrProvince: value.stateOrProvince
+})]]]></db:input-parameters>
+		</db:insert>
+		<logger level="INFO" doc:name="Logger" doc:id="1906acd6-b117-46fb-8c2b-c04b9c6c72af" />
+		<ee:transform doc:name="message" doc:id="007e04b7-dbb4-4be3-94ec-6fdd3a38e873" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Inserted"} ]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="dataweave-basisFlow8" doc:id="c6368933-eaba-4ff9-ad72-8f947b9a324a" >
+		<http:listener doc:name="/csvtojson" doc:id="922f52c4-bee7-47eb-96a6-dfb44d087aae" config-ref="HTTP_Listener_config" path="/csvtojson"/>
+		<ee:transform doc:name="Transform Message" doc:id="4c1b1e9a-d9a1-4c03-a327-b0efbbf9857f" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="c0e8a172-1fba-4c9f-941b-c02cde0e33a9" />
+	</flow>
+	<flow name="dataweave-basisFlow9" doc:id="f2a472e8-7f3a-44cd-b81d-1a5e8647290d" >
+		<http:listener doc:name="/csvtoxml" doc:id="f4c4b6bc-7e67-4ccc-a790-7ee3fcd20361" config-ref="HTTP_Listener_config" path="/csvtoxml"/>
+		<ee:transform doc:name="Transform Message" doc:id="63bccb91-800f-4970-bb53-718ca5dd703a" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml
+---
+{
+    root: payload
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="b774f535-1f67-494c-a78c-63a206a17cfc" />
+	</flow>
+	<flow name="Csv_to_DB_of_dataweave-basisFlow" doc:id="fd12f85f-0e58-475c-af8e-393bcf3a02d2" >
+		<http:listener doc:name="/csvtodb" doc:id="88e741db-8014-4e42-b1b9-7b7e13ebb849" config-ref="HTTP_Listener_config" path="/csvtodb" />
+		<ee:transform doc:name="Transform Message" doc:id="53742e8e-f3cd-4635-a725-6f7976dfc793" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<foreach doc:name="For Each" doc:id="650f5426-dece-41a3-bc70-2d52fc2d1d48" >
+			<db:insert doc:name="insert" doc:id="bd484b07-6eae-4aac-8de3-149d1b0c5721" config-ref="Database_Config">
+			<db:sql><![CDATA[insert into ADDRESS(address1,city,country,email,name,postalCode,stateOrProvince) values(:address1,:city,:country,:email,:name,:postalCode,:stateOrProvince)]]></db:sql>
+			<db:input-parameters><![CDATA[#[{
+	address1: payload.address1,
+	city: payload.city,
+	country: payload.country,
+	email: payload.email,
+	name: payload.name,
+	postalCode: payload.postalCode,
+	stateOrProvince: payload.stateOrProvince
+}]]]></db:input-parameters>
+		</db:insert>
+		</foreach>
+		<logger level="INFO" doc:name="Logger" doc:id="8e6667f0-1bd9-4cd8-9e1c-607e8bf69020" />
+		<ee:transform doc:name="message" doc:id="a8ea7c80-0383-42ec-a8be-8283d2ac144d" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Inserted"} ]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="dataweave-basisFlow10" doc:id="a139f04f-a9b5-4cd1-b696-6a5f1dc92fb2" >
+		<http:listener doc:name="/dbtojson" doc:id="de720425-bc87-4437-908f-27036ff88845" config-ref="HTTP_Listener_config" path="/dbtojson"/>
+		<db:select doc:name="Select" doc:id="71c825c3-f8d8-4c64-a074-9ce723d72b45" config-ref="Database_Config">
+			<db:sql ><![CDATA[SELECT * FROM ADDRESS]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="40d9f760-0508-48a1-b641-b14ea83b67cc" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="5a722387-d88e-4e4c-95ad-198bdaa751c3" />
+	</flow>
+	<flow name="dataweave-basisFlow11" doc:id="3347b26f-cbef-4a81-882c-9fc1e73dfef1" >
+		<http:listener doc:name="/dbtoxml" doc:id="a69dac52-1827-42be-badc-af2b7737bde1" config-ref="HTTP_Listener_config" path="/dbtoxml"/>
+		<db:select doc:name="Select" doc:id="8f41936b-9f02-4ad3-b530-895789951250" config-ref="Database_Config">
+			<db:sql ><![CDATA[SELECT * FROM ADDRESS]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="8c94eeaf-c64b-4513-a653-a535aa3ab7e8" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml
+---
+root:{
+  address: payload
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="457ddd57-dedc-410c-9676-0e86952d19d6" />
+	</flow>
+	<flow name="Copy_of_dataweave-basisFlow1" doc:id="4247eaf0-0cff-41b4-82f4-bcd519278008" >
+		<http:listener doc:name="/dbtocsv" doc:id="60dc3e13-871e-4e00-8f3d-82ff9f463d46" config-ref="HTTP_Listener_config" path="/dbtocsv" />
+		<db:select doc:name="Select" doc:id="0e427865-4674-4112-913b-dc679a295fda" config-ref="Database_Config" >
+			<db:sql ><![CDATA[SELECT * FROM ADDRESS]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="fcf9e5f6-4a21-4cf7-9186-bf09c2218b32" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/csv
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="18f65ea4-9285-41a8-bab4-0041d658494c" />
+	</flow>
+	<flow name="dataweave-basisFlow12" doc:id="1860b6ea-5a58-4a2e-94cd-1f2b49ca3b69" >
+		<http:listener doc:name="/dbtodb" doc:id="1d5405b0-6ac7-470f-b4bc-6155873e7494" config-ref="HTTP_Listener_config" path="/dbtodb"/>
+		<db:select doc:name="Select" doc:id="f224bff4-ffc5-4aee-ab89-107c54f7ef21" config-ref="Database_Config">
+			<db:sql ><![CDATA[SELECT * FROM ADDRESS]]></db:sql>
+		</db:select>
+		<foreach doc:name="For Each" doc:id="04ad9c04-cfd0-42c4-99dc-928ee0a40a21" >
+			<db:insert doc:name="Insert" doc:id="abc1891b-95b8-4952-a302-ee8ad4ccda53" config-ref="Database_Cofig_local">
+				<db:sql ><![CDATA[insert into ADDRESS(address1,city,country,email,name,postalCode,stateOrProvince) values(:address1,:city,:country,:email,:name,:postalCode,:stateOrProvince)]]></db:sql>
+				<db:input-parameters ><![CDATA[#[{
+	address1: payload.address1,
+	city: payload.city,
+	country: payload.country,
+	email: payload.email,
+	name: payload.name,
+	postalCode: payload.postalCode,
+	stateOrProvince: payload.stateOrProvince
+}]]]></db:input-parameters>
+			</db:insert>
+		</foreach>
+		<ee:transform doc:name="Transform Message" doc:id="c08d3bd4-722c-4813-a88b-aa5af594a113" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message: "insert"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="a12a5bc4-9d9a-4e31-8cda-7bd7e49613fa" />
+	</flow>
+	<flow name="file_to_DB_of_dataweave-basisFlow" doc:id="dbce9c61-b1c2-418a-b2d1-a5a0de5e19f8" >
+		<http:listener doc:name="/filetodb" doc:id="6768936f-75cf-461b-91a0-485ba3427fba" config-ref="HTTP_Listener_config" path="/filetodb" />
+		<file:read doc:name="Read" doc:id="9bab23ab-4edb-42d9-860c-2153a2d9d457" config-ref="File_Config" path="file.csv"/>
+		<ee:transform doc:name="Transform Message" doc:id="a48c837b-44c7-46de-a9de-90e9af83587a" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<foreach doc:name="For Each" doc:id="413c4322-21da-46e7-b60b-f9fac3242160" >
+			<db:insert doc:name="insert" doc:id="ca0a4c52-022c-4f5f-91e1-14e59cd52dc6" config-ref="Database_Config" >
+				<db:sql ><![CDATA[insert into ADDRESS(address1,city,country,email,name,postalCode,stateOrProvince) values(:address1,:city,:country,:email,:name,:postalCode,:stateOrProvince)]]></db:sql>
+				<db:input-parameters ><![CDATA[#[{
+	address1: payload.address1,
+	city: payload.city,
+	country: payload.country,
+	email: payload.email,
+	name: payload.name,
+	postalCode: payload.postalCode,
+	stateOrProvince: payload.stateOrProvince
+}]]]></db:input-parameters>
+			</db:insert>
+		</foreach>
+		<logger level="INFO" doc:name="Logger" doc:id="f61e3416-3586-45ac-9cf2-44b018905463" />
+		<ee:transform doc:name="message" doc:id="70ef9399-13e8-4667-9a85-151b0e622898" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Inserted"} ]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="dataweave-basisFlow13" doc:id="e590ad6f-4d7f-4bda-b1f5-fe919cf2042b" >
+		<http:listener doc:name="/filetojson" doc:id="35f43110-65b9-40c2-bfcc-0ad47d3aea7a" config-ref="HTTP_Listener_config" path="/filetojson"/>
+		<file:read doc:name="Read" doc:id="8e7434b1-e770-49f3-b082-52b6e91d8111" config-ref="File_Config" path="file.csv"/>
+		<ee:transform doc:name="Transform Message" doc:id="073f052c-56bc-431d-b7cd-7451e277915e" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="69e28e5f-dc9c-4420-98a0-f4eb0202180b" />
+	</flow>
+	<flow name="dataweave-basisFlow14" doc:id="eecac9a0-d9e4-4941-8bcf-0cca7a47acf2" >
+		<http:listener doc:name="/filetoxml" doc:id="5c45b711-f228-4261-8742-647058b87d1d" config-ref="HTTP_Listener_config" path="/filetoxml" allowedMethods="GET"/>
+		<file:read doc:name="Read" doc:id="4cb79b9a-ec44-4b60-b877-dd705aa3266f" config-ref="File_Config" path="file.csv"/>
+		<ee:transform doc:name="Transform Message" doc:id="77692b94-c665-448b-9dab-9805d71e1ecf" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml
+---
+main:
+{
+	root: payload
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="6fedb82c-1f0c-473c-90df-8e934ac92b3e" />
+	</flow>
+	<flow name="dataweave-basisFlow15" doc:id="67070296-f71e-41a0-9e7d-1f3c933cf318" >
+		<http:listener doc:name="/sfdctojson" doc:id="a9bde4ee-0d47-4a2b-af31-4833b48bf42f" config-ref="HTTP_Listener_config" path="/sfdctojson"/>
+		<salesforce:query doc:name="Query" doc:id="1d09c705-8ae6-4a25-91cd-222b46d248b9" config-ref="Salesforce_Config">
+			<salesforce:salesforce-query ><![CDATA[SELECT Id, Name, Phone, Email, Title FROM Contact]]></salesforce:salesforce-query>
+		</salesforce:query>
+		<ee:transform doc:name="Transform Message" doc:id="ecc1c205-9d75-4e18-92d3-17e3c918df3c" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="177f93f8-e350-4cf1-89cf-2a1cf7204d12" />
+	</flow>
+	<flow name="dataweave-basisFlow16" doc:id="3daefaa0-409f-436b-9223-b28eb35813d8" >
+		<http:listener doc:name="/sfdctocsv" doc:id="1ce9facb-fd9e-4ba1-b836-1b323e9d0c95" config-ref="HTTP_Listener_config" path="/sfdctocsv"/>
+		<salesforce:query doc:name="Query" doc:id="441211ad-f2aa-4aee-a1a9-efef0ec5f16e" config-ref="Salesforce_Config" >
+			<salesforce:salesforce-query ><![CDATA[SELECT Id, Name, Phone, Email, Title FROM Contact]]></salesforce:salesforce-query>
+		</salesforce:query>
+		<ee:transform doc:name="Transform Message" doc:id="ea76d8fe-131b-432c-a2bf-66c93b6c0d8e" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/csv
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="6ed58e9b-7f3f-4198-96bb-0b7a0d85c015" />
+	</flow>
+	<flow name="dataweave-basisFlow17" doc:id="45c55551-63a0-4cfc-a096-13da80184538" >
+		<http:listener doc:name="/sfdctoxml" doc:id="7c37f47e-c70f-4663-b2a2-3e83b4dc831b" config-ref="HTTP_Listener_config" path="/sfdctoxml"/>
+		<salesforce:query doc:name="Query" doc:id="addb6617-fe92-4f3a-8ca3-d4d9cd442819" config-ref="Salesforce_Config" >
+			<salesforce:salesforce-query ><![CDATA[SELECT Id, Name, Phone, Email, Title FROM Contact]]></salesforce:salesforce-query>
+		</salesforce:query>
+		<ee:transform doc:name="Transform Message" doc:id="2025c4b7-274d-43f6-a7d1-c10a7a0ffef7" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml
+---
+main:{root: payload}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="805a0337-d3d4-446a-b3c1-a63f3a480482" />
+	</flow>
+	<flow name="dataweave-basisFlow18" doc:id="01b8dc0a-5215-4510-b9c8-20c06bdcdfed" >
+		<http:listener doc:name="/sfdctodb" doc:id="b691a023-5fc2-49e2-a851-e8a8455892d0" config-ref="HTTP_Listener_config" path="/sfdctodb"/>
+		<salesforce:query doc:name="Query" doc:id="bcf0558f-239d-4905-9475-5d5f8d583f26" config-ref="Salesforce_Config" >
+			<salesforce:salesforce-query ><![CDATA[SELECT Id, Name, Phone, Email, Title FROM Contact]]></salesforce:salesforce-query>
+		</salesforce:query>
+		<ee:transform doc:name="Transform Message" doc:id="3aeb3d33-8136-47af-b66b-844c0240f2ea" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<foreach doc:name="For Each" doc:id="2d9e9378-6827-4dc7-b25f-3290853a437f" >
+			<db:insert doc:name="Insert" doc:id="f7d4c517-8cb8-4c23-9639-0b4a7757fa0f" config-ref="Database_Config">
+			<db:sql><![CDATA[insert into contact (Id, Name, Phone, Email, Title)
+values(:Id, :Name, :Phone, :Email, :Title)]]></db:sql>
+			<db:input-parameters><![CDATA[#[{
+	Id: payload.Id,
+	Name: payload.Name,
+	Phone: payload.Phone,
+	Email: payload.Email,
+	Title: payload.Title
+}]]]></db:input-parameters>
+		</db:insert>
+		</foreach>
+		<ee:transform doc:name="Transform Message" doc:id="4ce12d6c-239d-4a96-9576-e20ae488a03c" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{message: "inserted successfully"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="12151862-bc51-4c0a-a769-ea467add27b2" />
+	</flow>
+	<flow name="dataweave-basisFlow19" doc:id="5bfaf87f-53f3-4969-8c99-18addacfd81c" >
+		<http:listener doc:name="/sfdctofile" doc:id="103834eb-07da-488f-ad89-5416363b27f9" config-ref="HTTP_Listener_config" path="/sfdctofile"/>
+		<salesforce:query doc:name="Query" doc:id="81e656ad-b70b-42e4-82ff-fc7bd97349ca" config-ref="Salesforce_Config" >
+			<salesforce:salesforce-query ><![CDATA[SELECT Id, Name, Phone, Email, Title FROM Contact]]></salesforce:salesforce-query>
+		</salesforce:query>
+		<ee:transform doc:name="Transform Message" doc:id="496b76ea-e8b2-44e5-a20b-2f24995bba5c" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/csv
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<file:write doc:name="Write" doc:id="e7314eed-d719-4aed-b9f3-1205d3acf33e" config-ref="File_Config" path="SFDCtoFILE.csv"/>
+		<logger level="INFO" doc:name="Logger" doc:id="f765fd2a-dbf5-4e6c-bcbe-0af738c760de" />
+	</flow>
+	<flow name="dataweave-basisFlow20" doc:id="42de62e5-f397-43df-ac59-fbf1c0ce1bff" >
+		<http:listener doc:name="/jsontojms" doc:id="3947b8cb-4c1e-4dad-a842-7d5cdcb3110a" config-ref="HTTP_Listener_config" path="/jsontojms"/>
+		<logger level="INFO" doc:name="Logger" doc:id="5a3c8a54-b99f-4949-8c76-0f83167a8ab7" message="Publish Successfully---#[payload]"/>
+		<jms:publish doc:name="Publish" doc:id="729a80f0-50ae-4c57-8441-29bc1f50eb1a" config-ref="JMS_Config" destination="rohan" timeToLive="5" timeToLiveUnit="MINUTES" persistentDelivery="true">
+			<jms:message >
+				<jms:reply-to destination="rohan" />
+			</jms:message>
+		</jms:publish>
+	</flow>
+	<flow name="dataweave-basisFlow27" doc:id="fd351f06-d88d-4ac6-8d86-91f3459081da" >
+		<http:listener doc:name="Listener" doc:id="756171d5-89e0-48bb-a737-f7aa14d59705" config-ref="HTTP_Listener_config" path="/file"/>
+		<file:write doc:name="Write" doc:id="522de200-5d0d-4db0-8664-3e63b9afe045" config-ref="File_Config" path='#[now() as String{format:"YYYYMMddHHMMSS"} ++ ".json"]'/>
+	</flow>
+	<flow name="dataweave-basisFlow26" doc:id="bca1a688-38c4-4610-87ac-f043662b4d1f" initialState="stopped">
+		<jms:listener doc:name="On New Message" doc:id="f707b1d6-c82e-48b6-83a9-e874c1e7b4b6" config-ref="JMS_Config" destination="rohan" inboundContentType="application/json">
+			<jms:response persistentDelivery="true" timeToLive="5" timeToLiveUnit="MINUTES" />
+		</jms:listener>
+		<logger level="INFO" doc:name="Logger" doc:id="f824ced0-7730-409d-9a35-22b3059cbc8b" message="#[payload]"/>
+		<http:request method="POST" doc:name="Request" doc:id="7cf3dc54-afd1-4dcb-accd-bb4b45469ac5" url="http://localhost:8081/file"/>
+	</flow>
+	<flow name="dataweave-basisFlow21" doc:id="15a731e2-1596-46a9-8bbb-6b22843dca06" initialState="started">
+		<http:listener doc:name="/consume" doc:id="03ac2669-fbef-4ac8-b52a-59a4c44c80d5" config-ref="HTTP_Listener_config" path="/consume"/>
+		<jms:consume doc:name="Consume" doc:id="5890885b-22fa-4fad-bef5-95c89b47508b" config-ref="JMS_Config" destination="rohan"/>
+		<logger level="INFO" doc:name="Logger" doc:id="f0433874-69ee-4a12-8817-5f9812a4dcae" message="message received -- #[payload]"/>
+	</flow>
+	<flow name="dataweave-basisFlow22" doc:id="7b27fac4-00e6-4cc5-8440-2e2fe8436c57" >
+		<http:listener doc:name="/dbtojms" doc:id="8916ae69-56ff-4a35-84de-b0f758fa794f" config-ref="HTTP_Listener_config" path="/dbtojms"/>
+		<db:select doc:name="Select" doc:id="5a74dd1f-5509-4b67-8374-dcab64a30c5b" config-ref="Database_Config" >
+			<db:sql ><![CDATA[SELECT * FROM ADDRESS]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="86e9ca78-fa49-4821-a644-fe862c6b4e75" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="329a1eed-8367-4587-a901-86da45028b6a" />
+		<jms:publish doc:name="Publish" doc:id="eb937512-9dab-4d54-ace5-07011fd6d181" config-ref="JMS_Config" destination="rohan" />
+		<logger level="INFO" doc:name="Logger" doc:id="a4da8297-3200-4a2d-812a-d0682c542e75" />
+	</flow>
+	<flow name="datawaveexerrciseFlow23" doc:id="684535fd-2481-4b80-a68b-97e92033d809" >
+		<http:listener doc:name="JsonToSfdc" doc:id="fc1f981b-4ed4-462f-afe4-56cef27597f1" config-ref="HTTP_Listener_config" path="/jsontosfdc"/>
+		<ee:transform doc:name="Transform Message" doc:id="395b980e-c29c-4a33-a5d2-f8fdf2f8cd65" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload map(value,index)->
+{
+	
+	Phone:value.Phone,
+	Name:value.Name
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<salesforce:create doc:name="Create" doc:id="28acc16f-557a-4dc2-81b1-74a7631a9db7" config-ref="Salesforce_Config" type="Account" />
+		<ee:transform doc:name="Transform Message" doc:id="5e911b03-512d-40a4-b5aa-c8887eae4009" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload.items map(item,indexOfitem)->
+{
+	id:item.id as String default "",
+	message:payload.successful as String default ""
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="fab6ec50-a9c4-4e01-8c94-6abcdbc4867e" />
+	</flow>
+	<flow name="datawaveexerrciseFlow24" doc:id="11b2a642-a806-4983-9be0-aa419d9ee8b1" >
+		<http:listener doc:name="XmlToSfdc" doc:id="c461cf8a-ac5a-4852-90b5-95df391938eb" config-ref="HTTP_Listener_config" path="/xmltosfdc" />
+		<ee:transform doc:name="Transform Message" doc:id="4c391ead-b014-4e81-8608-f2ae27d4b8a8" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload..*root]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<salesforce:create type="Account" doc:name="Create" doc:id="2759c5b2-bd51-4fea-be54-4f95e8f60b35" config-ref="Salesforce_Config" />
+		<ee:transform doc:name="Transform Message" doc:id="3de1fe56-e571-4792-9510-e4b339086c2b" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload.items map(item,indexOfitem)->
+{
+	id:item.id as String default "",
+	message:payload.successful as String default ""
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="37c7e53c-24a3-4c34-970d-214197f08061" />
+	</flow>
+	<flow name="dataweave-basisFlow23" doc:id="c7df93ee-3f74-4ce4-8c2e-aa51a582021e" >
+		<http:listener doc:name="DBtoSFDC" doc:id="04244e68-f702-4aac-87c9-ae587729db42" config-ref="HTTP_Listener_config" path="/dbtosfdc"/>
+		<db:select doc:name="Select" doc:id="fdb9bb63-7485-4fdb-b0df-fed94e684aaa" config-ref="Database_Config">
+			<db:sql ><![CDATA[SELECT * FROM Account]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="05f0b89e-d5b6-43e2-981b-47dbf377cf29" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<salesforce:create type="Account" doc:name="Create" doc:id="8b39d35f-b098-4819-98a9-502a8ccb59fe" config-ref="Salesforce_Config" />
+		<ee:transform doc:name="Transform Message" doc:id="91c454f0-0b81-4fd2-ab41-633356dcdd72" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload.items map(item,indexOfitem)->
+{
+	id:item.id as String default "",
+	message:payload.successful as String default ""
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="9f221faa-495e-4e89-826e-51b45cdc2a07" />
+	</flow>
+	<flow name="dataweave-basisFlow24" doc:id="895a2bb0-0bbb-410b-8907-3912a2cc2c2b" >
+		<http:listener doc:name="filetosfdc" doc:id="65ca82c5-2713-4aa6-9fdf-46df1ba6db94" config-ref="HTTP_Listener_config" path="/filetosfdc"/>
+		<file:read doc:name="Read" doc:id="d75fe461-7014-4d5d-ab5c-1ce28cbb3448" config-ref="File_Config" path="acccount.csv"/>
+		<ee:transform doc:name="Transform Message" doc:id="e628e5ce-3694-4b37-9e94-1c442f9c20c6" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<salesforce:create type="Account" doc:name="Create" doc:id="8285cdfb-a002-46bf-9767-86692ed714a3" config-ref="Salesforce_Config" />
+		<ee:transform doc:name="Transform Message" doc:id="9d96520e-6922-41b3-83fc-3a755c82b4e4" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload.items map(item,indexOfitem)->
+{
+	id:item.id as String default "",
+	message:payload.successful as String default ""
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="c7abfb26-2eed-4e20-afcc-b9cfa7b52b62" />
+	</flow>
+	<flow name="dataweave-basisFlow28" doc:id="33dd866f-bfab-4207-87d8-d3279b73768b" >
+		<http:listener doc:name="Listener" doc:id="fdc541d0-3598-464f-adf0-a6bc665f7a7c" config-ref="HTTP_Listener_config" path="/salesforce"/>
+		<ee:transform doc:name="Transform Message" doc:id="e028a593-2786-450d-9e2a-7853d843d4d4" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<salesforce:create doc:name="Create" doc:id="6965704d-3dc6-4020-b74c-cb9c00af5247" config-ref="Salesforce_Config" type="Emp_contact__c"/>
+		<ee:transform doc:name="Transform Message" doc:id="7ccf65f2-acc8-426a-b6ec-763a4cf8e53d" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload.items map(item,indexOfitem)->
+{
+	id:item.id as String default "",
+	message:payload.successful as String default ""
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="52b62727-1f4c-45cb-a5f5-af94ecbb028a" />
+	</flow>
+	<flow name="dataweave-basisFlow29" doc:id="0504bfdc-a233-4144-8a57-1d9218728ca4" >
+		<http:listener doc:name="Listener" doc:id="c566edb5-1585-427c-bfdb-719e90b959a4" config-ref="HTTP_Listener_config" path="/callback"/>
+		<salesforce-composite:execute-composite-request doc:name="Execute composite request" doc:id="bd650406-76a5-4b0e-972f-36172d853caa" config-ref="Salesforce_Composite_Config"/>
+	</flow>
+</mule>

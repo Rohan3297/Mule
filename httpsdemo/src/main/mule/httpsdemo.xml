@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:validation="http://www.mulesoft.org/schema/mule/validation"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:tls="http://www.mulesoft.org/schema/mule/tls" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd 
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="f95c1221-2129-418b-85a0-655ca542a03f" >
+		<http:listener-connection protocol="HTTPS" host="0.0.0.0" port="8082" >
+			<tls:context >
+				<tls:key-store type="jks" path="mule.jks" keyPassword="password" password="password" />
+			</tls:context>
+		</http:listener-connection>
+	</http:listener-config>
+	<flow name="httpsdemoFlow" doc:id="936ec07a-812e-49e5-8126-e7a092aa6810" >
+		<http:listener doc:name="Listener" doc:id="a176c7c4-094c-40c4-84f5-37b172c33ccf" config-ref="HTTP_Listener_config" path="/httpsdemo"/>
+	</flow>
+	<flow name="watermarkeringFlow" doc:id="73b089e9-1811-428a-b94f-250a0d06d673" >
+<http:listener doc:name="Listener" doc:id="08cc0013-9088-4b80-9b8d-ebaaed585e60" config-ref="HTTP_Listener_config" path="/scatter"/>
+<scatter-gather doc:name="Scatter-Gather" doc:id="76710125-52f7-4ce4-b7a4-0d7ca13ed707" >
+<route>
+<try doc:name="Try" doc:id="f32d5592-283c-463e-813f-36b7e7541624" >
+<validation:is-null doc:name="Is null" doc:id="e48273c9-a763-41bd-98ea-70c0869d98ab" config-ref="Validation_Config" value="#[payload]" message="payload is empty"/>
+<error-handler >
+<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="60a1f680-f72d-4899-9490-48be78538469" >
+<set-payload value="#[error.description]" doc:name="Set Payload" doc:id="ee989490-499f-4bbe-8625-520266b520ce" />
+<logger level="INFO" doc:name="Logger" doc:id="d980321b-62ba-4790-8f03-f939b4a4126f" />
+</on-error-continue>
+</error-handler>
+</try>
+</route>
+<route>
+<try doc:name="Try" doc:id="bf3f1ce2-c113-4b8c-87e0-f24bf3494f10" >
+<flow-ref doc:name="bananaFlow1" doc:id="191cfe1d-b473-4a28-9c2f-7fb48764d59e" name="bananaFlow1" />
+<error-handler >
+<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="e14261d9-b309-410a-833b-4ab2d3b58a61" >
+<logger level="INFO" doc:name="Logger" doc:id="5b1b9fe7-eb65-4e0d-8454-4154c7eb405b" />
+</on-error-continue>
+</error-handler>
+</try>
+</route>
+<route>
+<try doc:name="Try" doc:id="61a4fa93-c818-4c4f-bb2b-0159ee467a73" >
+<flow-ref doc:name="appleFlow1" doc:id="c44166fc-4c93-40bb-83d9-de555cf3c630" name="appleFlow1" />
+<error-handler >
+<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="311d988f-6b6e-406d-879f-90fd62fa844c" >
+<logger level="INFO" doc:name="Logger" doc:id="41db77f6-60de-4efe-b001-047142eeb901" />
+</on-error-continue>
+</error-handler>
+</try>
+</route>
+</scatter-gather>
+<ee:transform doc:name="Transform Message" doc:id="a1bfe81f-4489-49b4-b20c-6ff700c215b4" >
+<ee:message >
+<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+</ee:message>
+</ee:transform>
+<logger level="INFO" doc:name="Logger" doc:id="2c5d6aba-ef04-40f2-a696-46762377d818" message='this is compl :#[ payload]'/>
+<logger level="INFO" doc:name="Logger" doc:id="1a58fc51-b962-4704-8bbd-e91cf56c684e" message="#[vars.kifhvfdhfdfhfkjfjkdfdskl]"/>
+</flow>
+<flow name="bananaFlow1" doc:id="e55fa74a-4753-436d-bc7d-5a9144e14304" >
+<set-payload value='#["banana"]' doc:name="banana" doc:id="3a465f72-2528-41f7-acf1-df3efbf25308" />
+<set-variable value="kifhvfdhfdfhfkjfjkdfdskl" doc:name="kifhvfdhfdfhfkjfjkdfdskl" doc:id="f6806910-06e4-4079-a7fe-dce6e0539cc0" variableName="kifhvfdhfdfhfkjfjkdfdskl"/>
+<logger level="INFO" doc:name="Logger" doc:id="cfb04cec-918a-4b1b-bed7-728dbfaef4a8" message='#["this is compl" ++ payload]' />
+</flow>
+<flow name="appleFlow1" doc:id="65cc4cde-caf7-41a0-bde5-b45316191aa9" >
+<set-payload value='#["apple"]' doc:name="apple" doc:id="ffec6ec7-8f34-4717-9bcc-de1e563a3fb7" />
+<logger level="INFO" doc:name="Logger" doc:id="ab09a853-03e0-4ab8-a31a-1d5f6aa067ae" message='#["this is compl" ++ payload]' />
+</flow>
+</mule>

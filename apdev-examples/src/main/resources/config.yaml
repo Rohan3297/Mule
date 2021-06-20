@@ -1,0 +1,17 @@
+http:
+  port: "8081"
+  
+sfdc:
+  username: "rohan@atdev.com"
+  password: "19ikEBRo"
+  token: "Z4X4Nsf2chz6wojbkm7Q2FQF"
+  
+file:
+  accountsDir: "E:/APDevFundamentals4.3_studentFiles_SP_30oct2020/resources"
+  
+db:
+  host: "mudb.learn.mulesoft.com"
+  port: "3306"
+  user: "mule"
+  password: "mule"
+  database: "training"

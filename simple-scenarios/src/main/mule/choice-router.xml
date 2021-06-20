@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:batch="http://www.mulesoft.org/schema/mule/batch"
+	xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd">
+	<flow name="choice-routerFlow" doc:id="e906e766-34ac-40a9-8d35-ecaa97212380" initialState="stopped">
+		<file:listener doc:name="On New or Updated File" doc:id="67cf28a1-f5d7-4673-9bf6-9837b0bd8ef1" config-ref="File_Config" directory="Source" moveToDirectory="Done">
+			<scheduling-strategy >
+				<fixed-frequency />
+			</scheduling-strategy>
+			<file:matcher filenamePattern="*.csv" />
+		</file:listener>
+		<ee:transform doc:name="Transform Message" doc:id="43b95605-b507-4396-98a7-671ad70828d9" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="4768f618-57d9-4341-bbbb-2d7bd3bd6435" message="#[payload]"/>
+		<batch:job jobName="choice-routerBatch_Jo" doc:id="19716269-ff62-44ba-9d54-02a37051900d" >
+			<batch:process-records >
+				<batch:step name="Batch_Step" doc:id="6b925ae7-3bd9-4222-bc6b-fa0de94fbbd6" >
+					<choice doc:name="Choice" doc:id="02fb3c7f-70b5-4000-907c-6cba901df997">
+			<when expression='#[payload.Qty &lt;= 0]' >
+							<ee:transform doc:name="Transform Message" doc:id="53f5fa4a-9026-4d33-b08a-663ac81240cf">
+								<ee:message>
+									<ee:set-payload><![CDATA[%dw 2.0
+output application/csv
+---
+payload]]></ee:set-payload>
+								</ee:message>
+							</ee:transform>
+							<ee:transform doc:name="Transform Message" doc:id="169ea691-ff84-4a78-9288-43a3ea1dd939">
+								<ee:message>
+									<ee:set-payload><![CDATA[%dw 2.0
+output application/csv
+---
+payload + {filler: "***********Error Record************"
+}]]></ee:set-payload>
+								</ee:message>
+							</ee:transform>
+							<file:write doc:name="Write" doc:id="f5c2f2cd-2e6d-43cb-ae68-f646cd552f81" config-ref="File_Config1" path="ch.csv" mode="APPEND">
+							</file:write>
+						</when>
+						<when expression='#[payload.ProductPrice &gt; 100]'>
+							<ee:transform doc:name="Transform Message" doc:id="ac36ba86-c611-4f93-b8bc-1060924a4610">
+								<ee:message>
+									<ee:set-payload><![CDATA[%dw 2.0
+output application/csv
+---
+payload]]></ee:set-payload>
+								</ee:message>
+							</ee:transform>
+							<ee:transform doc:name="Transform Message" doc:id="9a0c87af-d327-41d9-a8cb-982fc67d65bf" >
+								<ee:message >
+									<ee:set-payload ><![CDATA[%dw 2.0
+output application/csv header = false
+---
+payload + {filler: "***********Special Record************"
+}]]></ee:set-payload>
+								</ee:message>
+							</ee:transform>
+							<file:write doc:name="Write" doc:id="cfe0bf5a-ae3c-401b-8a59-a6f619289e3c" config-ref="File_Config1" path="ch.csv" mode="APPEND"/>
+						</when>
+						<otherwise>
+							<ee:transform doc:name="Transform Message" doc:id="dcec9f97-c5cd-43a4-846c-1fe9f21962f9">
+								<ee:message>
+									<ee:set-payload><![CDATA[%dw 2.0
+output application/csv
+---
+payload]]></ee:set-payload>
+								</ee:message>
+							</ee:transform>
+							<ee:transform doc:name="Transform Message" doc:id="33a7712b-e780-423b-8425-f2b0f6eab18c">
+								<ee:message>
+									<ee:set-payload><![CDATA[%dw 2.0
+output application/csv header= false
+---
+payload + {filler: "***********Normal Record************"
+}]]></ee:set-payload>
+								</ee:message>
+							</ee:transform>
+							<file:write doc:name="Write" doc:id="eb14927b-cadc-4a41-afe6-3ee321c9ed99" config-ref="File_Config1" path="ch.csv" mode="APPEND"/>
+						</otherwise>
+		</choice>
+				</batch:step>
+			</batch:process-records>
+			<batch:on-complete >
+				<logger level="INFO" doc:name="Logger" doc:id="f895164e-fe8f-4667-85bf-4d87cbb6aa82" />
+			</batch:on-complete>
+		</batch:job>
+	</flow>
+</mule>

@@ -1,0 +1,39 @@
+{
+  "configs": [
+    "config.xml",
+    "globalErrorHandler.xml",
+    "MySQL-eapi.xml",
+    "MySQL-eapi-implementation.xml"
+  ],
+  "secureProperties": [],
+  "redeploymentEnabled": true,
+  "name": "com.mycompany:mysql-eapi:1.0.0-SNAPSHOT",
+  "minMuleVersion": "4.3.0",
+  "requiredProduct": "MULE_EE",
+  "classLoaderModelLoaderDescriptor": {
+    "id": "mule",
+    "attributes": {
+      "exportedPackages": [],
+      "exportedResources": [
+        "api/examples/NoIDExample.raml",
+        "api/examples/order_based_on_ID.raml",
+        "api/examples/records_in_the_table.raml",
+        "api/examples/tables_in_the_db.raml",
+        "api/examples/update_order_example.raml",
+        "api/MySQL-eapi.raml",
+        "config.xml",
+        "dev.yaml",
+        "globalErrorHandler.xml",
+        "HTTPS-mule.jks",
+        "log4j2.xml",
+        "MySQL-eapi-implementation.xml",
+        "MySQL-eapi.xml",
+        "perprod.yaml"
+      ]
+    }
+  },
+  "bundleDescriptorLoader": {
+    "id": "mule",
+    "attributes": {}
+  }
+}

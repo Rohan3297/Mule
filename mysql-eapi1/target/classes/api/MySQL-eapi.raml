@@ -1,0 +1,122 @@
+#%RAML 1.0
+title: MySQL eapi
+
+/database:
+  /{databasename}:
+    displayName: databaseName
+    description: lists all the tables in the database.
+    get:
+      responses:
+        200:
+          body:
+            application/json:
+              example: !include examples/tables_in_the_db.raml
+        400:
+          body:
+            application/json:
+               example:
+                 message: "bad request"
+        404:
+          body:
+           application/json:
+                      example:
+                        message: " resource not found"                 
+                                      
+    /table:
+      /{tableName}:
+        displayName: input name of the table.
+        description: retrives all the records of the database        
+        get:
+          responses:
+            200:
+              body:
+                application/json:
+                  example: !include examples/records_in_the_table.raml
+            400:
+              body:
+                application/json:
+                  example:
+                    message: "bad request"
+            404:
+              body:
+                application/json:
+                  example:
+                    message: " resource not found"      
+        post:
+          displayName: create's a order
+          description: create's a order
+          body:
+            application/json:
+              example: !include examples/NoIDExample.raml
+          responses:
+            201:
+              body:
+                application/json:
+                  example:
+                     message: " order created in database"
+            400:
+              body:
+                application/json:
+                   example:
+                     message: "bad request"
+            404:
+              body:
+                application/json:
+                  example:
+                    message: " resource not found"                                                 
+        /{ID}:
+          displayName: input orderID
+          description: retrives data from the order's table for that orderID
+          get:
+            responses:
+              200:
+                body:
+                   application/json:
+                    example: !include examples/order_based_on_ID.raml
+              400:
+                body:
+                  application/json:
+                    example:
+                      message: "bad request"
+              404:
+                body:
+                  application/json:
+                    example:
+                      message: " resource not found"
+          put:
+            displayName: update order 
+            description: update's order depending on order ID
+            body:
+              application/json:
+                example: !include examples/update_order_example.raml
+            responses:
+              200:
+                body:
+                  application/json:
+                    example:
+                      {
+                        message: order updated successfully
+                      }
+              400:
+                body:
+                  application/json:
+                    example:
+                       message: bad request
+          delete:
+            displayName: delete's order
+            description: deletes order based on ID
+            responses:
+              200:
+                body:
+                  application/json:
+                    example:
+                     {
+                      message: order deleted successfully
+                      }
+              400:
+                body:
+                  application/json:
+                    example:
+                      {
+                      message: bad request
+                      }      

@@ -1,0 +1,77 @@
+#%RAML 1.0
+title: datawarehouse-sapi
+
+/Order:
+  post:
+    displayName: Creates a order
+    description: Creates a order
+    body:
+      application/json:
+        example: !include /Examples/example.raml
+    responses:
+      201:
+        body:
+          application/json:
+            example:
+              message: " order created in database"
+      400:
+        body:
+          application/json:
+            example:
+              message: "bad request"
+      404:
+        body:
+          application/json:
+            example:
+              message: " resource not found" 
+      405:
+        body:
+          application/json:
+            example:
+              message: "Method not allowed"
+      415:
+        body:
+          application/json:
+            example:
+              message: "unsupported media type"
+
+/Orders:
+  post:
+    displayName: Creates a order
+    description: Creates a order
+    body:
+      application/json:
+        example: !include /Examples/example.raml
+    responses:
+      201:
+        body:
+          application/json:
+            example:
+              message: " order created in database"
+      400:
+        body:
+          application/json:
+            example:
+              message: "bad request"
+      404:
+        body:
+          application/json:
+            example:
+              message: " resource not found" 
+      405:
+        body:
+          application/json:
+            example:
+              message: "Method not allowed"
+      415:
+        body:
+          application/json:
+            example:
+              message: "unsupported media type"
+      
+      
+      
+        
+          
+        
+    

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
+	<flow name="Choice-router-Ex-1Flow" doc:id="160b32c0-4876-4cca-9743-dcf8c5fea6fe" initialState="stopped">
+		<http:listener doc:name="Listener" doc:id="2830ac89-254a-41f0-8b6f-afc824613a67" config-ref="HTTP_Listener_config" path="/order" allowedMethods="GET"/>
+		<logger level="INFO" doc:name="Logger" doc:id="d7d1e432-52d5-42be-b2a7-c39f6e4d2352" />
+		<set-variable value="#[attributes.queryString]" doc:name="queryStringValue" doc:id="48487060-110a-482b-8042-4ac113742394" variableName="queryStringValue"/>
+		<logger level="INFO" doc:name="Logger" doc:id="778cb772-ad19-4e80-8fdd-644d418288b5" message="#[vars.queryStringValue]"/>
+		<choice doc:name="Choice" doc:id="b60e0300-c281-4de9-8829-f728f7f29002" >
+			<when expression='#[vars.queryStringValue == ""]'>
+				<file:rename doc:name="Rename" doc:id="4a316a3a-6c3f-42ee-9dd1-928b621d5ee3" config-ref="File_Config" path="old.csv" to="#[&quot;old&quot; ++ ( now() as String {format:'yyyy-MM-dd-hh-mm-ss'}  ) ++ &quot;.csv&quot;]"/>
+			</when>
+			<otherwise >
+				<file:rename doc:name="Rename" doc:id="f422646d-d32c-4049-b13d-9eefafa47bd5" config-ref="File_Config" path="old.csv" to='#[vars.queryStringValue ++ ".csv"]'/>
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="Logger" doc:id="74bd9c39-55a4-4e5d-9cce-8f79411dc4d4" />
+	</flow>
+</mule>

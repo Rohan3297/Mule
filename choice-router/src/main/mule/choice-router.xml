@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="8af31146-0582-4e58-8c4a-13f758a12130" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<file:config name="File_Config" doc:name="File Config" doc:id="e5fc90f2-ed12-47b6-a6da-9cfd3e07b055" >
+		<file:connection workingDir="D:\Batch\Target" />
+	</file:config>
+	<flow name="choice-routerFlow" doc:id="a6be4bde-f2c2-48b8-93e4-db81d126462c" initialState="stopped">
+		<http:listener doc:name="Listener" doc:id="a50044bb-5d6d-4ce8-9152-da4767c765ec" config-ref="HTTP_Listener_config" path="credit" allowedMethods="POST"/>
+		<logger level="INFO" doc:name="Logger" doc:id="5bbac509-287b-445f-a305-870879c0e39c" message="#[payload]"/>
+		<choice doc:name="Choice" doc:id="fc6df4fe-831f-4dbe-a0d9-fa0be6ee8d47" >
+			<when expression="#[payload.save_cc == true]">
+				<ee:transform doc:name="Transform Message" doc:id="2481d5fb-9efb-4d15-935e-01118c29ca6b">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/csv
+---
+payload]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<file:write doc:name="Write" doc:id="bdb3b634-2a24-4e1e-b9ee-fe7b710220eb" config-ref="File_Config" path="CreditCard.csv"/>
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="Logger" doc:id="141d3f90-20fe-40a3-b67a-be71b042c4c3" message="Credit card info not saved"/>
+				<set-payload value='#["Credit card info not saved"]' doc:name="Set Payload" doc:id="4095b4c3-8486-4787-ac24-9afd29012672" />
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="Logger" doc:id="617212d4-a287-4576-8270-64cf472baf23" message="#[payload]"/>
+	</flow>
+</mule>

@@ -1,0 +1,58 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="Order_Input" format="csv">
+      <types:shape format="weave" example="examples/Order_Input.csv"><![CDATA[%dw 2.0
+
+type Order_Input = Array<{|  "﻿OrderID": String,   CustomerID: String,   OrderStatus: String,   CarrierID: String,   OrderRecivedDate: String,   OrderFulfulmentDate: String,   Productid: String,   Qty: String,   ProductPrice: String|}> {"isQuotedString": "false",
+"header": "true",
+"headerLineNumber": "0",
+"separator": ","}
+
+]]></types:shape>
+      <types:properties>
+        <types:property name="headerLineNumber" value="0"/>
+        <types:property name="header" value="true"/>
+        <types:property name="isQuotedString" value="false"/>
+        <types:property name="separator" value=","/>
+      </types:properties>
+    </types:type>
+    <types:type name="all_out" format="csv">
+      <types:shape format="weave" example="examples/allOut.csv"><![CDATA[%dw 2.0
+
+type all_out = Array<{|  OrderID: String,   CustomerID: String,   OrderStatus: String,   CarrierID: String,   OrderRecivedDate: String,   OrderFulfulmentDate: String,   Productid: String,   Qty: String,   ProductPrice: String|}> {"isQuotedString": "false",
+"header": "true",
+"headerLineNumber": "0"}
+
+]]></types:shape>
+      <types:properties>
+        <types:property name="headerLineNumber" value="0"/>
+        <types:property name="header" value="true"/>
+        <types:property name="isQuotedString" value="false"/>
+      </types:properties>
+    </types:type>
+    <types:type name="out_csv" format="csv">
+      <types:shape format="weave" example="examples/out.csv"><![CDATA[%dw 2.0
+
+type out_csv = Array<{|  OrderID: String,   CustomerID: String,   OrderStatus: String,   CarrierID: String,   OrderRecivedDate: String,   OrderFulfulmentDate: String,   Productid: String,   Qty: String,   ProductPrice: String|}> {"isQuotedString": "false",
+"header": "true",
+"headerLineNumber": "0"}
+
+]]></types:shape>
+      <types:properties>
+        <types:property name="headerLineNumber" value="0"/>
+        <types:property name="header" value="true"/>
+        <types:property name="isQuotedString" value="false"/>
+      </types:properties>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#fe9a2f5a-b22c-4e63-a62c-c736fd835d9d">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="Order_Input"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+</types:mule>

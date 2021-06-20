@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:jms="http://www.mulesoft.org/schema/mule/jms"
+	xmlns:amqp="http://www.mulesoft.org/schema/mule/amqp"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/amqp http://www.mulesoft.org/schema/mule/amqp/current/mule-amqp.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="929e09cf-b588-45cf-a161-52f084d79545" >
+		<db:my-sql-connection host="remotemysql.com" port="3306" user="SIsaRsn2xh" password="RdYnULL2np" database="SIsaRsn2xh" />
+	</db:config>
+	<amqp:config name="AMQP_Config" doc:name="AMQP Config" doc:id="2a3b867b-1f9d-43a3-8e3a-491119d8edab" >
+		<amqp:connection host="puffin.rmq2.cloudamqp.com" virtualHost="/rdtpaqdd:rdtpaqdd" username="akash.thombare1808@gmail.com" password="JtKc6Rrdg4fiE5IGzZf54REgR2lLyaGI" port="25672"/>
+	</amqp:config>
+	<jms:config name="JMS_Config" doc:name="JMS Config" doc:id="4260013b-7914-4dcf-a93d-9dd0983b6e84" >
+		<jms:active-mq-connection>
+			<jms:factory-configuration brokerUrl="tcp://localhost:61616"/>
+		</jms:active-mq-connection>
+	</jms:config>
+	<http:request-config name="DatawareHouseHTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="86acdfc2-a321-4109-9535-26583f7b608e" basePath="/api" >
+		<http:request-connection protocol="HTTPS" host="datawarehouse-sapi.us-e2.cloudhub.io" port="8082"/>
+	</http:request-config>
+</mule>

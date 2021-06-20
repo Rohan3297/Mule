@@ -1,0 +1,38 @@
+{
+  "configs": [
+    "global.xml",
+    "jms-eapi-implimentation.xml",
+    "config.xml",
+    "jms-eapi.xml"
+  ],
+  "secureProperties": [
+    "secure::password",
+    "key1"
+  ],
+  "redeploymentEnabled": true,
+  "name": "com.mycompany:jms-eapi:1.0.0-SNAPSHOT",
+  "minMuleVersion": "4.3.0",
+  "requiredProduct": "MULE_EE",
+  "classLoaderModelLoaderDescriptor": {
+    "id": "mule",
+    "attributes": {
+      "exportedPackages": [],
+      "exportedResources": [
+        "api/examples/Order_example.raml",
+        "api/jms-eapi.raml",
+        "config.xml",
+        "dev-secure.yaml",
+        "dev.yaml",
+        "global.xml",
+        "HTTPS-mule.jks",
+        "jms-eapi-implimentation.xml",
+        "jms-eapi.xml",
+        "log4j2.xml"
+      ]
+    }
+  },
+  "bundleDescriptorLoader": {
+    "id": "mule",
+    "attributes": {}
+  }
+}

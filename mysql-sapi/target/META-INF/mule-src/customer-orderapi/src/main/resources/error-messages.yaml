@@ -1,0 +1,8 @@
+error:
+   message400: "Bad request"
+   message404: "Resource not found"
+   message405: "Method not allowed"
+   message406: "Not acceptable"
+   message415: "Unsupported media type"
+   message401: "Not Implemented"
+   

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="ca869194-a4b2-433c-bde4-d71510d86876" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="cb2358e3-28e4-476b-a314-e0a0e1d95e36" >
+		<db:my-sql-connection host="remotemysql.com" port="3306" user="1lAIHXc8Va" password="TEMA3CTgGO" database="1lAIHXc8Va" />
+	</db:config>
+	<os:object-store name="Object_store" doc:name="Object store" doc:id="f156a2f7-e9e3-494d-89cc-16df2f3b2bfa" />
+	<flow name="demo-object-storeFlow1" doc:id="250969f2-3a3f-4d18-bd93-b3673e87887c" >
+		<http:listener doc:name="Listener" doc:id="2869b1cd-0a23-4cff-a59b-6808e8184aba" config-ref="HTTP_Listener_config" path="/data"/>
+		<os:retrieve doc:name="Retrieve" doc:id="4c84ba5b-8992-4d8c-a8e8-9110b7211575" target="ob" key="key" objectStore="Object_store">
+			<os:default-value ><![CDATA[0]]></os:default-value>
+		</os:retrieve>
+		<logger level="INFO" doc:name="Logger" doc:id="3e5b5417-f557-4bb2-8831-99b7e0a8ac34" message="fetching records from id: #[vars.ob]"/>
+		<flow-ref doc:name="next" doc:id="5e8fbf90-6b4a-47de-82d5-9f1fd3953a2d" name="next"/>
+	</flow>
+	<sub-flow name="next" doc:id="1215f4a7-ac62-4c28-acbc-03d420bb85df" >
+		<db:select doc:name="Select" doc:id="2a7316b2-bc32-48a7-9321-02ba01d527e0" config-ref="Database_Config">
+			<db:sql><![CDATA[select * from EMPLOYEE where e_id>:e_id]]></db:sql>
+			<db:input-parameters><![CDATA[#[{
+	e_id: vars.ob
+}]]]></db:input-parameters>
+		</db:select>
+		<logger level="INFO" doc:name="Logger" doc:id="5d5415dd-0f5b-4975-8e8b-a73f62408d90" message="#[%dw 2.0&#10;output application/json&#10;---&#10;payload]" />
+		<os:store doc:name="Store" doc:id="2005dd47-2b66-4bff-a6d4-471868d94aa6" key="key" failOnNullValue="false" objectStore="Object_store">
+			<os:value><![CDATA[#[max(payload map $.e_id)]]]></os:value>
+		</os:store>
+		<ee:transform doc:name="Transform Message" doc:id="0847d5f2-2bb9-4b42-9eba-22a191c0472b" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</sub-flow>
+	<flow name="demo-object-storeFlow" doc:id="d0b3ab38-2e23-4986-aa0d-eaba495e7419" >
+		<http:listener doc:name="Listener" doc:id="816ff2f3-6c63-45c4-8ab0-48ab40276a5c" config-ref="HTTP_Listener_config" path="/null">
+			<http:error-response statusCode="400" />
+		</http:listener>
+		<set-payload value='#["Before"]' doc:name='"Before"' doc:id="9ceadc69-eb5d-4c8a-a1c5-8b2a614c88b2" />
+		<validation:is-null doc:name="Is null" doc:id="2212496a-2db4-4e58-ac10-2a3c5ca9e34c" value="#[payload]"/>
+		<set-payload value='#["After"]' doc:name='"After"' doc:id="ecbd9280-cc0c-436b-a8c9-f920ac193e11" />
+	</flow>
+	<flow name="demo-object-storeFlow2" doc:id="64b51aa4-abc7-46bf-9da7-24872c21ef75" >
+		<http:listener doc:name="Listener" doc:id="3ea55afb-7b4f-4c1e-8be8-a31fc6de50c1" config-ref="HTTP_Listener_config" path="/galat"/>
+		<set-payload value='#["Start"]' doc:name='"Start"' doc:id="79696d30-5988-4a76-b1e5-11f9da2c59e1" />
+		<set-variable value="0" doc:name="count=0" doc:id="ff7d3711-0769-40f7-92e1-12ca4ac5723b" variableName="count"/>
+		<set-payload value='#["Processing"]' doc:name='"Processing"' doc:id="35bbc68f-4b05-43a5-9d03-f31313d384b9" />
+		<set-variable value="1" doc:name="count=1" doc:id="fa9d7b60-29ff-49d4-9f0d-86489342bc5e" variableName="count"/>
+		<set-payload value='#["Complete"]' doc:name='"Complete"' doc:id="559d367f-61f0-4610-86d5-59666ea3b622" />
+	</flow>
+</mule>

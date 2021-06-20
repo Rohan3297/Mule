@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<flow name="getSFDCdata" doc:id="8b2bdb20-5319-4d62-beff-47978d88f7fd" >
+		<salesforce:new-object-listener objectType="Order__c" doc:name="Trigger" doc:id="155c890b-f54e-4429-8e43-39b9607613f7" config-ref="Salesforce_Config" since="2021-05-13 12:00:00">
+			<scheduling-strategy >
+				<fixed-frequency frequency="20000"/>
+			</scheduling-strategy>
+		</salesforce:new-object-listener>
+		<ee:transform doc:name="Java to JSON" doc:id="9bb9912f-8d18-483a-b095-b631753c7ec8" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+    source: "SFDC",
+    orderId: payload.Name,
+    customerName: payload.CustomerName__c,
+    orderStatus: payload.Status__c,
+    orderReceivedDate: payload.Order_Start_Date__c,
+    orderFulfillmentDate: payload.Order_End_Date__c,
+    quantity: payload.Order_Qty__c,
+    amount: payload.Order_amt__c,
+    cDate:now()
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="payload to be send" doc:id="d2b9d6bb-7cfb-4c5e-8951-d8fa8e6c4ac2" message="#[payload]"/>
+		<http:request method="POST" doc:name="POST request to SAPI" doc:id="f4fe9de8-4f7d-4800-85a1-1fbeabc957cb" config-ref="HTTP_Request_configuration" path="/Order" outputMimeType="application/json" sendBodyMode="ALWAYS"/>
+		<logger level="INFO" doc:name="After request" doc:id="2e285310-9150-41c6-a666-a471fe8144ad" />
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="a5814c02-c1a3-4cf9-b3ea-5d984f5c62ff" type="ANY">
+				<ee:transform doc:name="Transform Message" doc:id="2eefa5ed-4e13-429d-ba06-7494a93dbbda" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message: error.description
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</on-error-continue>
+		</error-handler>
+	</flow>
+</mule>

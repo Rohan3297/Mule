@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:s3="http://www.mulesoft.org/schema/mule/s3"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/s3 http://www.mulesoft.org/schema/mule/s3/current/mule-s3.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="9cec366a-3629-472c-9913-4d2495633501" >
+		<http:listener-connection host="0.0.0.0" port="${http.port}" />
+	</http:listener-config>
+	<configuration-properties doc:name="Configuration properties" doc:id="45394c13-d65c-4e68-a71c-98cdd55e34fe" file="config.properties" />
+	<s3:config name="Amazon_S3_Configuration" doc:name="Amazon S3 Configuration" doc:id="b0f346b9-42b7-4149-a948-73611af57320" >
+		<s3:basic-connection region="AP_SOUTH_1" accessKey="${aws.access}" secretKey="${aws.secret}"/>
+	</s3:config>
+	<flow name="new-error-handlingFlow" doc:id="4c45dfeb-1c39-4c8a-857a-e475a304bd00" >
+		<http:listener doc:name="Listener" doc:id="171c6e5f-e9e9-4dc2-b15d-2fdfbc974452" config-ref="HTTP_Listener_config" path="/error4"/>
+		<flow-ref doc:name="new-error-handling8" doc:id="737f5773-7033-491d-890e-18b711707daf" name="new-error-handling8"/>
+	</flow>
+	<flow name="new-error-handlingFlow1" doc:id="2639895d-c30b-4b79-a8dd-bebd0db344c2" >
+		<scheduler doc:name="Scheduler" doc:id="7742ddea-7f78-404f-a5a5-5e132afcaaf4" >
+			<scheduling-strategy >
+				<fixed-frequency frequency="1" timeUnit="HOURS"/>
+			</scheduling-strategy>
+		</scheduler>
+		<flow-ref doc:name="new-error-handling8" doc:id="29928b6b-1554-40bc-b371-42c86ae2f89e" name="new-error-handling8"/>
+	</flow>
+	<flow name="new-error-handling8" doc:id="ed77bdbf-10ee-4504-b25f-11a193ea46e0" >
+		<s3:get-object doc:name="Get object" doc:id="bda7c735-1d0c-422f-bde7-536f7b1f4e72" config-ref="Amazon_S3_Configuration" bucketName="filelandingzone" key="New Order.csv"/>
+		<logger level="INFO" doc:name="Logger" doc:id="38d2c75c-cb30-44e3-9910-bcd8ca0ed36a" />
+		<ee:transform doc:name="Transform Message" doc:id="0f52aa18-65ec-41ba-9dbb-15a3bec8dd42" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload groupBy ((item, index) -> item.CustomerID) ]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="33760b4b-890d-438d-bded-369da4dae7bd" message="#[payload]"/>
+	</flow>
+</mule>

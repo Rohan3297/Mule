@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd">
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="1e18ab4b-3068-4056-bfa5-e3020ec8a864" >
+		<db:my-sql-connection host="remotemysql.com" port="3306" user="1lAIHXc8Va" password="TEMA3CTgGO" database="1lAIHXc8Va"/>
+	</db:config>
+	<file:config name="File_Config" doc:name="File Config" doc:id="5dacd17f-859a-43cc-8b4a-8648772888d8" >
+		<file:connection workingDir="D:\Batch\ASYNC" />
+	</file:config>
+	<flow name="asyncFlow" doc:id="6b97b9a9-7f5b-41ed-9a03-b15f173303a4" initialState="stopped">
+		<db:listener doc:name="On Table Row" doc:id="47ef3091-ce58-4a8e-b713-a1a52f8408b8" config-ref="Database_Config" table="EMPLOYEE" watermarkColumn="e_id">
+			<scheduling-strategy >
+				<fixed-frequency frequency="10" timeUnit="SECONDS"/>
+			</scheduling-strategy>
+		</db:listener>
+		<logger level="INFO" doc:name="Logger" doc:id="2ede8273-ec29-4bfe-baea-17ea23b0ce00" message="start"/>
+		<async doc:name="Async" doc:id="87eba3de-5cf6-44e2-bd06-37ba06c69068" maxConcurrency="1">
+			<logger level="INFO" doc:name="Logger" doc:id="b5fe4e29-3941-4506-910f-fa0fc85bb135" message="inside async"/>
+			<scatter-gather doc:name="Scatter-Gather" doc:id="27ed8846-a082-425d-a593-14ecf30e0d21" >
+				<route >
+					<db:select doc:name="SALARY" doc:id="d9dc3242-520d-4d54-bf3a-ed6582fe02f5" config-ref="Database_Config">
+			<db:sql><![CDATA[SELECT e_id, e_name, e_designation, e_email, e_salary FROM EMPLOYEE]]></db:sql>
+		</db:select>
+					<ee:transform doc:name="Transform Message" doc:id="4d2fc0f8-e4b7-4a96-8b8a-fd4221c52453" >
+						<ee:message >
+							<ee:set-payload ><![CDATA[%dw 2.0
+output application/csv
+---
+payload]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+					<file:write doc:name="Write" doc:id="db16d686-e415-4030-862c-9c22bfeffc49" config-ref="File_Config" path="finance_system.csv"/>
+				</route>
+				<route >
+					<db:select doc:name="ASSET" doc:id="a63eab83-404c-4aec-8d08-600c5828072f" config-ref="Database_Config">
+						<db:sql ><![CDATA[SELECT e_id, e_name, e_designation, e_email, e_asset FROM EMPLOYEE]]></db:sql>
+					</db:select>
+					<ee:transform doc:name="Transform Message" doc:id="2db95018-f7c3-4dba-a5ec-229537ca93d1" >
+						<ee:message >
+							<ee:set-payload ><![CDATA[%dw 2.0
+output application/csv
+---
+payload]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+					<file:write doc:name="Write" doc:id="a0ed763a-d631-4208-b367-533ddf358069" config-ref="File_Config" path="asset.csv"/>
+				</route>
+				<route >
+					<db:select doc:name="HR management" doc:id="52153669-d026-49d3-9c47-b35f7573aa6e" config-ref="Database_Config">
+						<db:sql ><![CDATA[SELECT e_id, e_name, e_designation, e_email, e_project_allocation, e_leave FROM EMPLOYEE]]></db:sql>
+					</db:select>
+					<ee:transform doc:name="Transform Message" doc:id="2bd1cb68-8d9c-42f4-9422-7a1a0100c92a" >
+						<ee:message >
+							<ee:set-payload ><![CDATA[%dw 2.0
+output application/csv
+---
+payload]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+					<file:write doc:name="Write" doc:id="76ad732b-246c-4033-bc5f-488c7c4915c9" config-ref="File_Config" path="hr.csv"/>
+				</route>
+			</scatter-gather>
+		</async>
+		<logger level="INFO" doc:name="Logger" doc:id="94bbaf2a-b628-49c5-a41f-40312b38ff20" message="end "/>
+	</flow>
+	<flow name="asyncFlow1" doc:id="be362803-4ffc-4ae8-9820-46587c78b5d4" >
+		<db:listener table="EMPLOYEE" doc:name="On Table Row" doc:id="38e11c19-391c-45c0-abc8-3c0ecafbeaba" config-ref="Database_Config" watermarkColumn="e_id" >
+			<scheduling-strategy >
+				<fixed-frequency frequency="10" timeUnit="SECONDS" />
+			</scheduling-strategy>
+		</db:listener>
+		<logger level="INFO" doc:name="Logger" doc:id="9073da39-aa20-4faa-9c57-1d1bd0b91777" message="START"/>
+		<async doc:name="Async" doc:id="809de95b-ed0a-4395-b692-d88b88ad7666" maxConcurrency="1">
+			<logger level="INFO" doc:name="Logger" doc:id="bc2f348c-34e1-464e-9049-37e7ded2b773" message="ASYNC"/>
+			<scatter-gather doc:name="Scatter-Gather" doc:id="3d097d32-1f4d-45dc-92ae-f5846cb7b5fc" >
+				<route >
+					<flow-ref doc:name="salary" doc:id="e8c95347-057b-4bf2-b973-4c3d109abd97" name="salary"/>
+				</route>
+				<route >
+					<flow-ref doc:name="asset" doc:id="f55f0d4c-3abf-4271-be9a-8e505acfc8a8" name="asset"/>
+				</route>
+				<route >
+					<flow-ref doc:name="project" doc:id="81097719-489e-4315-bfb6-2186bc2ead78" name="project"/>
+				</route>
+			</scatter-gather>
+			<logger level="INFO" doc:name="Logger" doc:id="dc91d219-6ac2-469d-b8e1-3dbbbff53cb0" message="END"/>
+		</async>
+	</flow>
+	<sub-flow name="salary" doc:id="17db72ee-09ae-42a4-b29f-69dd2787a4f7" >
+		<db:select doc:name="SALARY" doc:id="76146bf2-7847-4ba8-816f-89ab191542b3" config-ref="Database_Config" >
+			<db:sql ><![CDATA[SELECT e_id, e_name, e_designation, e_email, e_salary FROM EMPLOYEE]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="48631db2-196c-4429-9706-123838e6d918" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/csv
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<file:write doc:name="Write" doc:id="51bf29ef-93c6-41df-ad19-61ffb91e29ad" config-ref="File_Config" path="sub-salary-file.csv"/>
+	</sub-flow>
+	<sub-flow name="asset" doc:id="03ff8d57-9315-4da1-952b-97b7f57bd834" >
+		<db:select doc:name="ASSET" doc:id="7faf2c3f-acbc-4c12-a9b8-70c2df8e57d1" config-ref="Database_Config" >
+			<db:sql ><![CDATA[SELECT e_id, e_name, e_designation, e_email, e_asset FROM EMPLOYEE]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="fba3219a-2ce5-4572-9029-b7a87029f50a" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/csv
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<file:write doc:name="Write" doc:id="1ecb0d9e-248c-4c39-9934-cd764077ef18" config-ref="File_Config" path="sub-asset.csv"/>
+	</sub-flow>
+	<sub-flow name="project" doc:id="ac168c61-a85c-4633-b814-e9329817e594" >
+		<db:select doc:name="HR management" doc:id="b68e8e27-413d-47ec-8e87-b728be61a35d" config-ref="Database_Config" >
+			<db:sql ><![CDATA[SELECT e_id, e_name, e_designation, e_email, e_project_allocation, e_leave FROM EMPLOYEE]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="8ed03a3c-83bf-4b99-b9f6-bb230f413fb3" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/csv
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<file:write doc:name="Write" doc:id="5ec854ab-5f00-4f4d-b694-0d8db6f114fa" config-ref="File_Config" path="sub-project.csv"/>
+	</sub-flow>
+	<http:listener-config name="HTTP_Listener_config">
+  <http:listener-connection host="0.0.0.0" port="8081" />
+</http:listener-config>
+<flow name="raise-error-example-flow">
+  <http:listener config-ref="HTTP_Listener_config" path="/test"/>
+  <choice>
+    <when expression="#[message.attributes.queryParams.age &lt; 16]">
+      <raise-error type="PRECONDITIONS:INCORRECT_AGE" description="Minimum age of 16 required to drive" />
+    </when>
+    <otherwise >
+      <logger level="INFO" message="User age above 16 years. Allowed to drive"/>
+    </otherwise>
+  </choice>
+  <error-handler >
+    <on-error-continue enableNotifications="true" logException="true" type="PRECONDITIONS:INCORRECT_AGE">
+      <logger level="INFO" message="Minimum age to drive is 16 years old"/>
+    </on-error-continue>
+    <on-error-continue enableNotifications="true" logException="true"  type="MULE:EXPRESSION">
+      <logger level="INFO" message="The parameter age is missing or invalid"/>
+    </on-error-continue>
+  </error-handler>
+</flow>
+</mule>

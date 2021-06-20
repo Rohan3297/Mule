@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="61645e82-3e9d-43f4-a2bf-edca01151735" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="exercise2Flow" doc:id="318ad6ec-800e-48e1-8e24-9a90fd22181a" >
+		<http:listener doc:name="Listener" doc:id="ad9e894e-1af8-4136-9332-cd43139b8c18" config-ref="HTTP_Listener_config" path="/sg2" allowedMethods="GET">
+		</http:listener>
+		<logger level="INFO" doc:name="Logger" doc:id="c635c806-521f-40c6-9375-b6af3f148a4b" />
+		<scatter-gather doc:name="Scatter-Gather" doc:id="ca1a2188-c655-4d92-bee0-089fd2810552" >
+			<route >
+				<set-payload value='#["Indigo 2 seats available"]' doc:name="Indigo " doc:id="22825d5d-f5fe-4b19-9777-47de5d1e33c7" />
+				<ee:transform doc:name="Transform Message" doc:id="283f7f86-6a45-4339-acfc-369ad0436d33" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<logger level="INFO" doc:name="Logger" doc:id="8e2d744a-bf93-417a-961a-fc71e3963405" message="#[payload]"/>
+				<set-variable value="#[payload]" doc:name="Flight1" doc:id="52d1bedb-8d8b-4aa3-8436-40c41becefe2" variableName="Flight1"/>
+			</route>
+			<route >
+				<set-payload value='#["Uftanza 0 seats avialable"]' doc:name="Uftanza" doc:id="46d26061-40d6-4bc2-84ef-d19b2c2702e6" />
+				<ee:transform doc:name="Transform Message" doc:id="00388f9d-0b16-48d9-8c7c-355bcc58489c" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<logger level="INFO" doc:name="Logger" doc:id="603080e1-6dbc-48c4-bfce-91d0751bd193" message="#[payload]"/>
+				<set-variable value="#[payload]" doc:name="Flight2" doc:id="138f06fb-696b-4b94-822b-cd256a5c7751" variableName="Flight2"/>
+			</route>
+			<route >
+				<set-payload value='#["Indian Airlines 2 seats available"]' doc:name="Indian Airlines" doc:id="d9dc8a8b-2a46-4d8a-a301-3088b927fd3d" />
+				<ee:transform doc:name="Transform Message" doc:id="1ddedfbe-879e-47be-8a22-cd65a80fbf22" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<logger level="INFO" doc:name="Logger" doc:id="2b23ea62-3417-41e6-a3f4-184a0934e5c0" message="#[payload]"/>
+				<set-variable value="#[payload]" doc:name="Flight3" doc:id="32c80667-d370-4eae-b4b4-c9e080e0507b" variableName="Flight3"/>
+			</route>
+		</scatter-gather>
+		<ee:transform doc:name="Transform Message" doc:id="4b251ac1-9ceb-4085-bee3-84929826e842" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{Flight1:vars.Flight1,
+ Fight2:vars.Flight2,
+ Flight3:vars.Flight3
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="6c880a81-7867-45e7-80c5-cedc09145cec" message="COMPLYA"/>
+	</flow>
+</mule>

@@ -1,0 +1,8 @@
+db:
+ host: "remotemysql.com"
+ port: "3306"
+ user: "SBFWOa2sno"
+ database: "SBFWOa2sno"
+ 
+https:
+  port: "8092"

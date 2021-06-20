@@ -1,0 +1,398 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="GetData" doc:id="43966a31-7158-43fd-b63f-29cf395d9a0e" >
+		<set-variable value="#[message.attributes.uriParams.tableName]" doc:name="name" doc:id="b3d80883-0983-42e0-bce2-d128ccaf05ed" variableName="name"/>
+		<db:select doc:name="Select" doc:id="84b9bc92-e773-4447-9043-c0a1baea7168" config-ref="Database_Config1">
+			<db:sql ><![CDATA[#["Select * from $(vars.name)"]]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="json payload" doc:id="c57fbf57-d816-4504-8e28-12f10b289ac1" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="6dd550b2-eaad-4ba5-b85b-09fa959e6a35" />
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="061d7712-8058-42d7-a7ab-f5fe4fd7a9d5" type="DB:BAD_SQL_SYNTAX">
+				<ee:transform doc:name="Transform Message" doc:id="fae1046a-8ccf-4db6-8f21-545d71f7e1b0" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"type": error.errorType,
+	"message": error.description
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</on-error-continue>
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="2de34d07-aa0b-4383-92ff-e33d6185dc49" type="DB:CONNECTIVITY">
+				<ee:transform doc:name="Transform Message" doc:id="2e393a31-2998-4245-9e23-56462d0c0940" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"type": error.errorType,
+	"message": error.description
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</on-error-continue>
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="63b4370d-a939-451c-b46a-fa2df10cf627" type="DB:QUERY_EXECUTION">
+				<ee:transform doc:name="Transform Message" doc:id="7071c557-16ca-4fa7-90ee-ac71cd6f58d1" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"type": error.errorType,
+	"message": error.description
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</on-error-continue>
+		</error-handler>
+	</flow>
+	<flow name="getSingleIdDeta" doc:id="970eb076-79fc-4132-a311-af842c92bea7" >
+		<set-variable value="#[message.attributes.uriParams.tableName]" doc:name="name" doc:id="e24a24dc-0a58-4ec6-ba0b-643f58e1a1b9" variableName="name"/>
+		<set-variable value="#[message.attributes.uriParams.orderID]" doc:name="id" doc:id="8f1ca93f-7784-4b9a-a620-8c3c34f0d120" variableName="id"/>
+		<db:select doc:name="Select" doc:id="e1de2ed5-6f8b-4bc7-99cf-9aefb19f3abe" config-ref="Database_Config1">
+			<db:sql ><![CDATA[#["Select * from $(vars.name) where $(vars.name).$(vars.name)ID=$(vars.id)"]]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="json payload" doc:id="5e50086e-926b-4082-9f56-425ac36442c5" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="120e0c91-f88a-496f-80de-dfb6a52288ff" />
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="697b6df1-fe38-4092-8504-9061f4322d62" type="DB:BAD_SQL_SYNTAX">
+				<ee:transform doc:name="Transform Message" doc:id="3add8c78-aeb3-4045-a868-8b6e2b72960b" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"type": error.errorType,
+	"message": error.description
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</on-error-continue>
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="d42e8193-b1ba-40af-b5ba-fda9126e1dfe" type="DB:CONNECTIVITY">
+				<ee:transform doc:name="Transform Message" doc:id="d5676b03-7a20-4932-afe1-910c89dccae2" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"type": error.errorType,
+	"message": error.description
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</on-error-continue>
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="c9049aa7-6df6-48b0-967f-fcb0b955b291" type="DB:QUERY_EXECUTION">
+				<ee:transform doc:name="Transform Message" doc:id="a850d9e7-5859-450b-86b6-60be7279bcfe" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"type": error.errorType,
+	"message": error.description
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</on-error-continue>
+		</error-handler>
+	</flow>
+	<flow name="postData" doc:id="e2bbcb40-fa91-4ccf-89a5-0e498ceeb26a" >
+		<set-variable value="#[message.attributes.uriParams.tableName]" doc:name="name" doc:id="614039e5-6bdc-4841-8237-508bdfbe38ae" variableName="name"/>
+		<choice doc:name="Choice" doc:id="269e08a0-cbba-4556-9703-b7480fb17ac2" >
+			<when expression="#[vars.name=='Orders']">
+				<db:insert doc:name="Insert" doc:id="3de12273-d519-40d3-b195-c774b1f7cee0" config-ref="Database_Config1">
+			<db:sql><![CDATA[Insert into Orders(ShipPostalCode,ShipCountry,OrderDate,Freight,ShipAddress,Priority,ShipCity,Price,
+ShipRegion,RequiredDate,ShipName)values(:ShipPostalCode,:ShipCountry,:OrderDate,:Freight,
+:ShipAddress,:Priority,:ShipCity,:Price,:ShipRegion,:RequiredDate,:ShipName)]]></db:sql>
+			<db:input-parameters><![CDATA[#[{      
+        ShipPostalCode: payload.ShipPostalCode,
+        ShipCountry: payload.ShipPostalCode,
+        Freight: payload.Freight,
+        ShipAddress: payload.ShipAddress,
+        ShippedDate: payload.ShippedDate,
+        OrderDate: payload.OrderDate,
+        Priority: payload.Priority,
+        ShipCity: payload.ShipCity,
+        Price: payload.Price,
+        ShipRegion: payload.ShipRegion,
+        RequiredDate: payload.RequiredDate ,
+        ShipName: payload.ShipName
+}]]]></db:input-parameters>
+		</db:insert>
+			</when>
+			<when expression="#[vars.name=='Customers']">
+				<db:insert doc:name="Insert" doc:id="d8c57814-5e88-4205-9e6c-8c467adfc512" config-ref="Database_Config1">
+					<db:sql ><![CDATA[Insert into Customers(ContactName,Country,Address,City,Phone,CompanyName,ContactTitle,PostalCode,Region,Fax)values
+(:ContactName,:Country,:Address,:City,:Phone,:CompanyName,:ContactTitle,:PostalCode,:Region,:Fax)]]></db:sql>
+					<db:input-parameters ><![CDATA[#[{
+        "ContactName": payload.ContactName,
+        "Country": payload.Country,
+        "Address": payload.Address,
+        "City": payload.City,
+        "Phone": payload.Phone,
+        "CompanyName": payload.CompanyName,
+        "ContactTitle":payload.ContactTitle,
+        "PostalCode": payload.PostalCode,
+        "Region": payload.Region,
+        "Fax": payload.Fax
+        }]]]></db:input-parameters>
+				</db:insert>
+			</when>
+			<when expression="#[vars.name=='Categories']">
+				<db:insert doc:name="Insert" doc:id="e4afd0ce-9a56-4853-b375-e72313785b32" config-ref="Database_Config1">
+					<db:sql ><![CDATA[insert into Categories(CategoriesID,Description,CategoryName) values(:cid,:desc,:cname)]]></db:sql>
+					<db:input-parameters ><![CDATA[#[{
+	cid: payload.CategoriesID,
+    desc: payload.Description,
+    cname: payload.CategoryName
+}]]]></db:input-parameters>
+				</db:insert>
+			</when>
+			<when expression="#[vars.name=='Employees']">
+				<db:insert doc:name="Insert" doc:id="eb53aa32-d649-4ec7-aa24-b73d46a59360" config-ref="Database_Config1">
+					<db:sql ><![CDATA[INSERT INTO Employees(LastName,FirstName,Title,TitleOfCourtesy,BirthDate,HireDate,Address,City,Region,PostalCode,
+Country, HomePhone,Extension,Notes,Salary) VALUES (:LastName,:FirstName,:Title,:TitleOfCourtesy,:BirthDate,:HireDate,
+:Address,:City,:Region,:PostalCode,:Country,:HomePhone,:Extension,:Notes,:Salary)]]></db:sql>
+					<db:input-parameters ><![CDATA[#[{ LastName:payload.LastName,
+FirstName:payload.FirstName,
+Title:payload.Title,
+TitleOfCourtesy:payload.TitleOfCourtesy,
+BirthDate:payload.BirthDate,
+HireDate:payload.HireDate,
+Address:payload.Address,
+City:payload.City,
+Region:payload.Region,
+PostalCode:payload.PostalCode,
+Country:payload.Country,
+HomePhone:payload.HomePhone,
+Extension:payload.Extension,
+Notes:payload.Notes,
+Salary:payload.Salary
+}]]]></db:input-parameters>
+				</db:insert>
+			</when>
+			<otherwise >
+				<raise-error doc:name="Raise error" doc:id="8f88d853-4cb3-493a-89f0-9ef3b8e29411" type="TABLE:WRONG_TABLE"/>
+			</otherwise>
+		</choice>
+		<ee:transform doc:name="json payload" doc:id="3a7a6c4a-ea7d-43b5-81a9-9e1e307587c7" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message":"data added successfully"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="8409cccb-df51-4bc8-9522-8ae912ae2617" />
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="ff8bd3e3-a8e2-4859-8012-5b5df6a5a64d" type="DB:BAD_SQL_SYNTAX">
+				<ee:transform doc:name="Transform Message" doc:id="b8ebd0f4-0128-4851-a12b-c998a2fc718e" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"type": error.errorType,
+	"message": error.description
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</on-error-continue>
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="5aa5a836-868c-47be-a303-db6761839a7d" type="DB:CONNECTIVITY">
+				<ee:transform doc:name="Transform Message" doc:id="ab0f496f-35d0-4d19-8ca5-9480f7e58c84" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"type": error.errorType,
+	"message": error.description
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</on-error-continue>
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="2ab3cd40-69de-43a7-8055-ce6929a64827" type="DB:QUERY_EXECUTION">
+				<ee:transform doc:name="Transform Message" doc:id="98c54cde-643d-42a7-95be-9c9c7a4fd06e" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"type": error.errorType,
+	"message": error.description
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</on-error-continue>
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="36498497-796b-46a3-ac84-9116ef8c6d9e" type="TABLE:WRONG_TABLE">
+				<ee:transform doc:name="Transform Message" doc:id="ebb545e8-351e-4aa1-a60b-7ae72b21b8b3" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message":"Table not exist"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</on-error-continue>
+		</error-handler>
+	</flow>
+	<flow name="updateData" doc:id="ab568e3d-8e16-4b5f-8e6d-d4949792ab97" >
+		<set-variable value="#[message.attributes.uriParams.orderID]" doc:name="ID" doc:id="255f6afa-a69c-4788-b0f3-dfc8427b3851" variableName="ID"/>
+		<set-variable value="#[message.attributes.uriParams.tableName]" doc:name="name" doc:id="87dc6b9d-5956-46d6-b12c-ab1b1039e816" variableName="name"/>
+		<choice doc:name="Choice" doc:id="f86c8ad1-be95-4c32-a002-67e800f5f342" >
+			<when expression="#[vars.name=='Orders']">
+				<db:update doc:name="Update" doc:id="7b1c5109-d6f0-4aaa-a127-085341e9e21e" config-ref="Database_Config1">
+			<db:sql><![CDATA[#["UPDATE Orders
+SET Price=:Price,ShipPostalCode=:ShipPostalCode,ShipCountry=:ShipCountry,OrderDate=:OrderDate,Freight=:Freight,
+ShipAddress=:ShipAddress,Priority=:Priority,ShipCity=:ShipCity,ShipRegion=:ShipRegion,RequiredDate=:RequiredDate,ShipName=:ShipName
+WHERE OrdersID=$(vars.ID)"]]]></db:sql>
+			<db:input-parameters><![CDATA[#[{      
+        ShipPostalCode: payload.ShipPostalCode,
+        ShipCountry: payload.ShipPostalCode,
+        Freight: payload.Freight,
+        ShipAddress: payload.ShipAddress,
+        ShippedDate: payload.ShippedDate,
+        OrderDate: payload.OrderDate,
+        Priority: payload.Priority,
+        ShipCity: payload.ShipCity,
+        Price: payload.Price,
+        ShipRegion: payload.ShipRegion,
+        RequiredDate: payload.RequiredDate ,
+        ShipName: payload.ShipName
+}]]]></db:input-parameters>
+		</db:update>
+			</when>
+			<when expression="#[vars.name=='Customers']">
+				<db:update doc:name="Update" doc:id="ac389424-bc15-4f46-ac32-695d7dda7d50" config-ref="Database_Config1">
+					<db:sql ><![CDATA[#["UPDATE Customers SET ContactName=:ContactName,Country=:Country,Address=:Address,City=:City,Phone=:Phone,CompanyName=:CompanyName,ContactTitle=:ContactTitle,PostalCode=:PostalCode
+,Region=:Region,Fax=:Fax WHERE CustomersID=$(vars.ID)"]]]></db:sql>
+					<db:input-parameters ><![CDATA[#[{
+    desc: payload.Description,
+    cname: payload.CategoryName
+}]]]></db:input-parameters>
+				</db:update>
+			</when>
+			<when expression="#[vars.name=='Categories']">
+				<db:update doc:name="Update" doc:id="b4b4b6e6-25c6-40dd-93b7-2c87537dd799" config-ref="Database_Config1">
+					<db:sql ><![CDATA[#["UPDATE Categories SET Description=:desc,CategoryName=:cname WHERE CategoriesID=$(vars.ID)"]]]></db:sql>
+					<db:input-parameters ><![CDATA[#[{
+    desc: payload.Description,
+    cname: payload.CategoryName
+}]]]></db:input-parameters>
+				</db:update>
+			</when>
+			<when expression="#[vars.name=='Employees']">
+				<db:update doc:name="Update" doc:id="03cbb4d4-e5fe-43bc-a798-fc78b30d95dc" config-ref="Database_Config1">
+					<db:sql ><![CDATA[#["UPDATE Employees SET LastName= :LastName,FirstName= :FirstName,Title= :Title,TitleOfCourtesy= :TitleOfCourtesy,BirthDate= :BirthDate,HireDate= :HireDate,
+Address= :Address,City= :City,Region= :Region,PostalCode= :PostalCode,Country= :Country,HomePhone= :HomePhone,Extension= :Extension,Notes= :Notes,Salary= :Salary
+WHERE EmployeesID=$(vars.ID)"]]]></db:sql>
+					<db:input-parameters ><![CDATA[#[{ LastName:payload.LastName,
+FirstName:payload.FirstName,
+Title:payload.Title,
+TitleOfCourtesy:payload.TitleOfCourtesy,
+BirthDate:payload.BirthDate,
+HireDate:payload.HireDate,
+Address:payload.Address,
+City:payload.City,
+Region:payload.Region,
+PostalCode:payload.PostalCode,
+Country:payload.Country,
+HomePhone:payload.HomePhone,
+Extension:payload.Extension,
+Notes:payload.Notes,
+Salary:payload.Salary
+}]]]></db:input-parameters>
+				</db:update>
+			</when>
+			<otherwise>
+				<raise-error doc:name="Raise error" doc:id="3c6c2671-fcc8-4b3f-a00b-745446986f00" type="TABLE:WRONG_TABLE" description="Table not exist"/>
+			</otherwise>
+		</choice>
+		<ee:transform doc:name="json payload" doc:id="3672fae1-2f5a-43ac-89ed-a546765ad2cf" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message":"data updated successfully"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="a5c148a6-4966-44ee-b38a-7c9a30a387a9" />
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="da5a0df8-daa1-4363-bc18-48f0cc230df2" type="TABLE:WRONG_TABLE">
+				<ee:transform doc:name="Transform Message" doc:id="279a0d8b-46d3-4602-93a3-dd4c8789788c" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message":"Table not exist"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</on-error-continue>
+		</error-handler>
+	</flow>
+	<flow name="deleteData" doc:id="9829dad0-098e-4ab2-974b-b5635d2d919d" >
+		<set-variable value="#[message.attributes.uriParams.tableName]" doc:name="name" doc:id="6ebd08ba-e830-40a8-afa4-5da4974067b1" variableName="name"/>
+		<set-variable value="#[message.attributes.uriParams.orderID]" doc:name="id" doc:id="81195f91-d4f9-4474-a2fa-56902dac9a57" variableName="id"/>
+		<db:delete doc:name="Delete" doc:id="328ae8ff-31fe-4794-9104-7b855c9b9ff8" config-ref="Database_Config1">
+			<db:sql ><![CDATA[#["delete 
+from $(vars.name) 
+where $(vars.name)ID = $(vars.id)"]]]></db:sql>
+		</db:delete>
+		<ee:transform doc:name="json payload" doc:id="9128c012-5be1-4f6f-8936-3a2552d654c7" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message":"data deleted successfully"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="261f2805-ca8c-4ee1-9e47-84538e2ab12c" />
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="3b939909-875f-431d-bb22-15e626097c6b" type="DB:BAD_SQL_SYNTAX">
+				<ee:transform doc:name="Transform Message" doc:id="e6d7bbc8-1692-47f6-85bf-a217e5fffe33" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message": error.description
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</on-error-continue>
+		</error-handler>
+	</flow>
+</mule>

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<error-handler name="globalError_Handler" doc:id="ac1902bb-c2f1-4402-a930-d4e949d5eff5" >
+		<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="1f498a40-7e29-45fd-a7d8-296d684f585d" type="HTTP:TIMEOUT">
+			<ee:transform doc:name="Transform Message" doc:id="d99c1c72-65fc-4abe-b720-b8f9fc41214e">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	messaage: "TIME OUT FOR  " ++ message.attributes.uriParams.tableName
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<set-variable value="408" doc:name="Set Variable" doc:id="4798536c-2204-4003-8aaf-3bf32043f73b" variableName="httpStatus" />
+		</on-error-propagate>
+		<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="c3555023-58d1-4dba-b31c-36cd099aff8d" type="ANY">
+			<ee:transform doc:name="Transform Message" doc:id="661a4b5b-07ac-4a23-919a-09abb133715d" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+"message":error.description
+
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+		</on-error-continue>
+	</error-handler>
+</mule>

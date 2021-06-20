@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="807cfb53-d85e-465c-9701-2eb266fb1582" >
+		<http:listener-connection host="0.0.0.0" port="8081"/>
+	</http:listener-config>
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="8a8c95b2-ad75-460f-b2f3-64bcce1163a7" >
+		<http:request-connection protocol="HTTPS" host="erp.fastcomcorp.com">
+			<http:authentication >
+				<http:basic-authentication username="admin" password="admin" />
+			</http:authentication>
+		</http:request-connection>
+	</http:request-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="f5708292-0a7b-4ebf-ac93-ad18077a4c14" >
+		<db:generic-connection url="jdbc:postgresql://localhost:5432/erp601" driverClassName="org.postgresql.Driver" user="postgres" password="postgres" />
+	</db:config>
+	<file:config name="File_Config" doc:name="File Config" doc:id="f59ea514-a5d8-420b-b2ac-82242f66670f" >
+		<file:connection workingDir="D:\Batch" />
+	</file:config>
+	<flow name="erpFlow1" doc:id="27dd0b57-ec6a-4b98-a779-3c8b621c9407" >
+		<http:listener doc:name="Listener" doc:id="ac926a1b-26b8-4bbd-9ea0-4bd97cc6e73f" config-ref="HTTP_Listener_config" path="/connect"/>
+		<http:request method="POST" doc:name="Request" doc:id="0a2d5a6f-37e4-4821-a104-097d6cb377f7" config-ref="HTTP_Request_configuration" url="https://erp.fastcomcorp.com/axelor-erp/login.jsp"/>
+		<logger level="INFO" doc:name="Logger" doc:id="5983f527-475b-4c0f-8fc6-589f497dbf70" />
+	</flow>
+	<flow name="erpFlow" doc:id="7f82f0fd-ec16-4ae9-993c-c2cc36dc0f31" >
+		<http:listener doc:name="/salesorder" doc:id="c761a459-15c1-4a16-b8c1-1b8eae4571b3" config-ref="HTTP_Listener_config" path="/salesorder"/>
+		<set-variable value='#[attributes.queryParams.id]' doc:name="get" doc:id="3a30232d-5eaf-4389-88db-29dd42dd10ad" variableName="get"/>
+		<logger level="INFO" doc:name="Logger" doc:id="52b20628-37e1-42fb-9164-d9cb0a467db7" message="#[vars.get]"/>
+		<http:request method="GET" doc:name="Request" doc:id="91581f61-c3f2-4ea7-840a-409cc00ac42f" config-ref="HTTP_Request_configuration" url="https://erp.fastcomcorp.com/axelor-erp/ws/rest/com.axelor.apps.sale.db.SaleOrder/"/>
+		<ee:transform doc:name="Transform Message" doc:id="9dcb2e1a-0681-475a-8785-32fdd76f47ae">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload.data map ((item, index) ->
+{
+    OrderNumber: item.saleOrderSeq,
+    orderDate: item.orderDate,
+            itemList: item.saleOrderLineList map ((value, i) -> 
+                {   
+                    
+                    product_code : value.id,
+                    Product_Name: value.fullName,
+                    description: item.description
+                    
+                }),
+                    qty: sizeOf(item.saleOrderLineList.id),
+                    unitPrice: item.totalCostPrice/sizeOf(item.saleOrderLineList.id),
+                    totalCostPrice: item.totalCostPrice
+                    
+} )
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="f38e5e76-9d7c-49d2-8953-e7c2620bf28d" message="#[payload]"/>
+		<ee:transform doc:name="Transform Message" doc:id="65fc5ed6-365b-4ca6-9a14-882b6060cac3" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload filter (value, index) -> (value.OrderNumber == vars.get)]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="e3e8e4ac-bea4-4018-966c-16428bc26aeb" />
+	</flow>
+</mule>

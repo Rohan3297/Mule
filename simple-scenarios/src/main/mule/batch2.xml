@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:validation="http://www.mulesoft.org/schema/mule/validation"
+	xmlns:batch="http://www.mulesoft.org/schema/mule/batch"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<validation:config name="Validation_Config" doc:name="Validation Config" doc:id="cae7cecd-1845-4721-ab4d-19807bce7775" />
+	<flow name="batch2Flow" doc:id="9c5251e7-a497-4e4a-a46c-ee347e9e15a0" initialState="stopped">
+		<file:listener doc:name="On New or Updated File" doc:id="af156688-17df-44ab-9a38-c7e2572f9eab" config-ref="File_Config" directory="Source" moveToDirectory="Done">
+			<scheduling-strategy >
+				<fixed-frequency />
+			</scheduling-strategy>
+			<file:matcher filenamePattern="*.csv" />
+		</file:listener>
+		<ee:transform doc:name="CSV to Java" doc:id="71fdb5af-2273-44f8-9d71-417b906f1fe8" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<batch:job jobName="batch2Batch_Job" doc:id="ec73e9e9-f45e-4c29-9801-df7ed7b282ad" >
+			<batch:process-records >
+				<batch:step name="Batch_Step" doc:id="5abc41e9-3dd0-4890-bd65-60645e7d6d93" >
+					<logger level="INFO" doc:name="Logger" doc:id="1add66f9-227a-41df-9514-af0b3401ca2b" />
+					<batch:aggregator doc:name="Batch Aggregator" doc:id="86882e10-1f63-451e-b88f-eddde024287a" size="10" preserveMimeTypes="true">
+						<ee:transform doc:name="Java to XML" doc:id="799b095f-625a-4825-a005-9842046e9927">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/xml
+---
+ Orders: {(payload map {
+    Order : {
+        OrderID: $.OrderID,
+        CustomerID: $.CustomerID,
+        OrderStatus: $.OrderStatus,
+        CarrierID: $.CarrierID,
+        OrderRecivedDate: $.OrderRecivedDate,
+        OrderFulfulmentDate: $.OrderFulfulmentDate,
+        Product: {
+            Productid: $.Productid,
+            Qty: $.Qty,
+            ProductPrice: $.ProductPrice
+        }}
+ })}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+						<file:write doc:name="Write" doc:id="7cee6cdd-f5a7-4820-b66e-5bf9ac53ce44" config-ref="File_Config1" path="#['MyFile' ++ ( now() as String {format:'yyyy-MM-dd-hh-mm-ss'}  ) ++ (random() * 1000) ++ '.xml']"/>
+					</batch:aggregator>
+				</batch:step>
+			</batch:process-records>
+			<batch:on-complete >
+				<logger level="INFO" doc:name="Logger" doc:id="ad4d0afb-9673-4118-89f5-d258796a2dc7" />
+			</batch:on-complete>
+		</batch:job>
+	</flow>
+	<flow name="batch2Flow1" doc:id="999a9b0e-f6bd-4f55-96d1-bda9e4e889c3" initialState="stopped">
+		<file:listener doc:name="On New or Updated File" doc:id="3e9f7750-fca9-44d7-9d4c-3df36fbad774" config-ref="File_Config" directory="csv" moveToDirectory="Done">
+			<scheduling-strategy>
+				<fixed-frequency />
+			</scheduling-strategy>
+			<file:matcher filenamePattern="*.csv" />
+		</file:listener>
+		<ee:transform doc:name="Transform Message" doc:id="4a7ebac3-8354-4fb0-b1e4-fabd444fcd31" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/csv
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<file:write doc:name="Write" doc:id="d1bf41e2-9dca-43db-a40b-68e11018f8a9" path="ans.csv"/>
+		<ee:transform doc:name="Transform Message" doc:id="96ac9e84-af50-470c-9cf0-885c9a29ad3a">
+						<ee:message>
+							<ee:set-payload><![CDATA[%dw 2.0
+output application/csv header = false
+---
+payload]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+		<batch:job jobName="batch2Batch_Job1" doc:id="4aaeeb32-b946-40cd-92c1-70834b14441b" blockSize="10">
+			<batch:process-records >
+				<batch:step name="Batch_Step1" doc:id="372d40d3-e54c-43da-9c9e-cc6e59f0c00e" >
+					<logger level="INFO" doc:name="Logger" doc:id="4519381c-da94-4a3b-8249-450adee773b4" message="#[payload]"/>
+					<file:write doc:name="Write" doc:id="4c07b956-48a0-448f-95b8-f3b5f266af8e" config-ref="File_Config1" path="ans.csv" mode="APPEND" />
+				</batch:step>
+			</batch:process-records>
+			<batch:on-complete >
+				<logger level="INFO" doc:name="Logger" doc:id="f10f58de-e343-4a73-9872-76e12d85b359" />
+			</batch:on-complete>
+		</batch:job>
+	</flow>
+	<flow name="batch-failFlow" doc:id="f40a275e-a611-4218-97a9-79e064ecc684" >
+<http:listener doc:name="Listener" doc:id="2d7dd465-6872-4755-a1cd-9ff2c634bd95" config-ref="HTTP_Listener_config" path="/fail"/>
+<set-payload value='#[[&#10;{&#10;"accId":"294375",&#10;"usageTypeId":"100234",&#10;"amount":"0"&#10;},&#10;{&#10;"accId":"294376",&#10;"usageTypeId":"100554",&#10;"amount":"10"&#10;},&#10;{&#10;"accId":"294376",&#10;"usageTypeId":"100554",&#10;"amount":"15"&#10;},&#10;{&#10;"accId":"294376",&#10;"usageTypeId":"100554",&#10;"amount":"0"&#10;}&#10;]]' doc:name="Set Payload" doc:id="8c071060-294e-406c-9553-c5b5b6dbdd7a" mimeType="application/json" />
+		<logger level="INFO" doc:name="Logger" doc:id="00ca5009-3804-4824-86a8-e927fa6effc8" />
+<batch:job jobName="batch-postBatch_Job" doc:id="b0cb4963-99e7-47b0-8d21-071ad73fd3c2" maxFailedRecords="5">
+<batch:process-records >
+<batch:step name="Batch_Step1" doc:id="b8401172-2c8e-4f70-b869-6c6e01bf9f69" acceptPolicy="ALL">
+<logger level="INFO" doc:name="Logger" doc:id="b82ace27-62b8-4beb-974d-bf671f8185a0" />
+					<choice doc:name="Choice" doc:id="c32308aa-ecd8-4345-8404-e6eec5b657b2" >
+						<when expression="payload.amount&lt;=0">
+							<raise-error doc:name="Raise error" doc:id="a6716b99-50c3-46ec-839d-889962e435b9" type="CUSTOM:AMT_ZERO" description="Amount is zero"/>
+						</when>
+						<otherwise >
+							<ee:transform doc:name="Transform Message" doc:id="669667bb-cf5c-403a-aac0-f3379c7a1126">
+<ee:message>
+<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+</ee:message>
+</ee:transform>
+						</otherwise>
+					</choice>
+					<batch:aggregator doc:name="Batch Aggregator" doc:id="15a9d9a3-3b33-4c27-a8f4-d4a9f9f3366c" size="5" preserveMimeTypes="true">
+						<ee:transform doc:name="Transform Message" doc:id="b5ef4b97-9ecb-46ca-be5b-1c708042863a" >
+							<ee:message >
+								<ee:set-payload ><![CDATA[%dw 2.0
+output application/csv
+---
+payload]]></ee:set-payload>
+							</ee:message>
+						</ee:transform>
+						<file:write doc:name="Write" doc:id="ec9273c9-1e06-43d2-8373-b6ec6d2e1e2c" config-ref="File_Config1" path="suucess.csv"/>
+					</batch:aggregator>
+
+</batch:step>
+				<batch:step name="Batch_Step2" doc:id="86e9d515-1e64-4cd6-8eab-413dcf9e2788" acceptPolicy="ONLY_FAILURES">
+					<logger level="INFO" doc:name="Logger" doc:id="bb2d674e-ac19-4d7a-8890-58aa175ae1b5" />
+					<batch:aggregator doc:name="Batch Aggregator" doc:id="7caae5fc-ded7-4ae0-8847-f62aadf56583" size="10" preserveMimeTypes="true">
+<ee:transform doc:name="Transform Message" doc:id="7e9a1974-089f-4a34-b813-5fbaa444e099">
+<ee:message>
+<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+</ee:message>
+</ee:transform>
+<ee:transform doc:name="Transform Message" doc:id="e84eca75-eed6-410b-8f26-952fa5d0c44f">
+<ee:message>
+<ee:set-payload><![CDATA[%dw 2.0
+output application/csv
+---
+payload map ((item, index) -> {
+    accId: item.accId,
+    usageTypeId: item.usageTypeId,
+    amount: "account has amount less than 0"
+})]]></ee:set-payload>
+</ee:message>
+</ee:transform>
+<file:write doc:name="Write" doc:id="d9a6a295-b6ab-4a38-9fee-92765cb7ba77" config-ref="File_Config1" path="error.csv" />
+</batch:aggregator>
+				</batch:step>
+
+</batch:process-records>
+<batch:on-complete >
+<logger level="INFO" doc:name="Logger" doc:id="8c81c55d-8341-40e8-8808-82ad78932a10" message='#["complya"]'/>
+</batch:on-complete>
+</batch:job>
+</flow>
+	<flow name="batch2Flow2" doc:id="0c00aada-57a6-42da-b070-4d876eddffa7" >
+		<http:listener doc:name="Listener" doc:id="e0ea1d7d-14ce-4286-a10c-55550273bc26" config-ref="HTTP_Listener_config" path="/order"/>
+		<set-payload value='#["Oder01"]' doc:name='"Oder01"' doc:id="2a8dc653-4e47-496c-b5aa-cde6c07b30ca" />
+		<set-variable value="1" doc:name="quantity to 1" doc:id="dbfc2759-692e-4996-9269-85557b85f349" variableName="quantity"/>
+		<flow-ref doc:name="child" doc:id="a2b821ce-8244-45fc-8249-ddb8274f96c1" name="child"/>
+	</flow>
+	<flow name="child" doc:id="77d1a23e-ae13-4974-8d0f-207011dea42c" >
+		<logger level="INFO" doc:name="Logger" doc:id="a35522b9-c72b-4f36-8544-e7a5bf8e828b"/>
+	</flow>
+</mule>

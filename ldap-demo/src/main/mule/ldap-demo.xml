@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ldap="http://www.mulesoft.org/schema/mule/ldap" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ldap http://www.mulesoft.org/schema/mule/ldap/current/mule-ldap.xsd">
+	<ldap:config name="LDAP_Configuration" doc:name="LDAP Configuration" doc:id="de9383b3-0b3c-4e40-80e7-13ed8af3e964" >
+		<ldap:basic-connection authDn="cn=Manager,dc=maxcrc,dc=com" authPassword="secret" url="ldap://localhost:389/dc=maxcrc,dc=com" />
+	</ldap:config>
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="a455d8d6-0f7f-45b0-bfe7-59eee9381ff0" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="ldap-demoFlow" doc:id="de4e1b37-2410-4091-98f5-3c8c54d10efe" >
+		<http:listener doc:name="Listener" doc:id="4407ce09-9aae-4a95-863c-3606f318bb72" config-ref="HTTP_Listener_config" path="/ldap"/>
+		<ldap:search doc:name="Search" doc:id="4f82a0d4-177f-4627-b110-2966151d3fc1" config-ref="LDAP_Configuration" baseDn="ou=people" filter="(objectClass=*)"/>
+		<set-payload value="#[output application/json --- payload]" doc:name="Set Payload" doc:id="386c628e-42bc-4c2c-8c8c-1c7563725f00" />
+	</flow>
+</mule>

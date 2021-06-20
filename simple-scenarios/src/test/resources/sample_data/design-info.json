@@ -1,0 +1,10 @@
+{
+  "sampleData": {
+    "ba125c84-507d-464f-8b2e-8eb64d61bf1c": {
+      "payload": "sample_data/batchjobresult.dwl"
+    },
+    "0d3dfbe1-3712-44ae-8ee6-f32d507865b8": {
+      "payload": "sample_data/list_java.dwl"
+    }
+  }
+}

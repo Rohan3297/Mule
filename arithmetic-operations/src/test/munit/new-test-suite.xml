@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="new-test-suite.xml" />
+	<munit:test name="new-test-suite-arithmetic-operationsFlowTest" doc:id="abb4face-033d-4951-8275-0618a58c09c2" description="Test">
+		<munit:behavior >
+			<set-payload value='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;    "a": 9,&#10;    "b": 13&#10;}]' doc:name="Set Payload" doc:id="982f4815-7ec1-40a3-800b-2d386cbecf99" mimeType="application/json"/>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to arithmetic-operationsFlow" doc:id="012e6f04-cd51-48f8-8bb8-be92a150f8b6" name="arithmetic-operationsFlow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-that doc:name="Assert that" doc:id="1fd62675-e538-40ba-a841-d10a1fcbdd1a" expression="#[payload.sum]" is="#[MunitTools::equalTo(22)]" message="fail zala"/>
+		</munit:validation>
+	</munit:test>
+
+
+</mule>

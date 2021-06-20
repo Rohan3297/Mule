@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:cassandra-db="http://www.mulesoft.org/schema/mule/cassandra-db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/cassandra-db http://www.mulesoft.org/schema/mule/cassandra-db/current/mule-cassandra-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<cassandra-db:config name="CassandraDB_Config" doc:name="CassandraDB Config" doc:id="1806f8a7-acc4-43e9-bf2d-05e1c384fa01" >
+		<cassandra-db:connection host="localhost" />
+	</cassandra-db:config>
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="b5e26414-5ef6-4224-bb00-ec0a5edd331c" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="cassandra-demoFlow" doc:id="971fc8ce-5e80-42b5-aec3-e477b66f5312" >
+		<http:listener doc:name="SELECT" doc:id="58690939-f4b3-451a-b6ed-b8755c1d906d" config-ref="HTTP_Listener_config" path="/cassandra"/>
+		<cassandra-db:select doc:name="Select" doc:id="b74a7a39-fbb3-4911-a6d4-a7ee911b1b8d" config-ref="CassandraDB_Config">
+			<cassandra-db:query ><![CDATA[select * from my_test_keyspace.employee;]]></cassandra-db:query>
+		</cassandra-db:select>
+		<ee:transform doc:name="Transform Message" doc:id="d815522c-53d3-41bf-a0ac-4a75386d6036" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="cassandra-demoFlow4" doc:id="de84c395-23a0-40d5-ab3e-04bc0e833a6f" >
+		<http:listener doc:name="CREATE" doc:id="42e98bc9-ee2a-460c-8b6d-2454193a60ff" config-ref="HTTP_Listener_config" path="/create"/>
+		<cassandra-db:create-table doc:name="Create Table" doc:id="1b8cc3db-5e21-4de6-ae13-1940efb31bf8" config-ref="CassandraDB_Config" >
+			<cassandra-db:create-table-input ><![CDATA[create table my_test_keyspace.TestTable (x int PRIMARY KEY, y text);]]></cassandra-db:create-table-input>
+		</cassandra-db:create-table>
+		<ee:transform doc:name="Transform Message" doc:id="90c77daf-d6fe-4b46-b2c1-0232a9b9bc5d" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message: "created"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="cassandra-demoFlow1" doc:id="ef683709-9866-4e99-9649-c770db7d6555" >
+		<http:listener doc:name="INSERT" doc:id="f8186e25-0b2f-4404-b2a7-d322ecd14986" config-ref="HTTP_Listener_config" path="/insert"/>
+		<cassandra-db:insert doc:name="Insert Entity" doc:id="10435688-3c76-4805-9810-1d24cc34ee97" config-ref="CassandraDB_Config" table="employee" keyspaceName="my_test_keyspace"/>
+		<ee:transform doc:name="Transform Message" doc:id="b2b88b83-01f1-46b5-8253-30b47d737397" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message: "inserted successfully"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="cassandra-demoFlow3" doc:id="5cc99616-66fd-483e-a656-b386d44ed3b7" >
+		<http:listener doc:name="DELETE" doc:id="c075affe-f1cb-43e4-a030-80c60ae11a65" config-ref="HTTP_Listener_config" path="/delete"/>
+		<cassandra-db:drop-table doc:name="Drop Table" doc:id="86c842e2-08d7-4c7b-805b-5556741c4787" config-ref="CassandraDB_Config" keyspaceName="my_test_keyspace">
+			<cassandra-db:table-name ><![CDATA[testtable]]></cassandra-db:table-name>
+		</cassandra-db:drop-table>
+		<ee:transform doc:name="Transform Message" doc:id="cc54c0b8-bd2f-40ac-8d14-9f2bc56643fc" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message: "deleted successfully"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="cassandra-demoFlow2" doc:id="1dde1e51-7599-4bad-9a1f-58a76e9d36af" >
+		<http:listener doc:name="UPDATE" doc:id="5ffdfecb-fa63-468c-80b4-1023e60a44b8" config-ref="HTTP_Listener_config" path="/update"/>
+		<cassandra-db:update doc:name="Update  Entity" doc:id="5c606e1d-b48d-498a-85a5-679cc4fad605" config-ref="CassandraDB_Config" keyspaceName="my_test_keyspace" table="employee"/>
+		<ee:transform doc:name="Transform Message" doc:id="ff98a5f1-bb51-4d88-be0c-58c53368b48d" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message: "updated successfully"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>

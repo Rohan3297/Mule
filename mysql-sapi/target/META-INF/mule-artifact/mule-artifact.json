@@ -1,0 +1,43 @@
+{
+  "configs": [
+    "config.xml",
+    "globalErrorHandler.xml",
+    "mysql-sapi-interface.xml",
+    "mysql-sapi-implementation.xml"
+  ],
+  "secureProperties": [
+    "secure::password",
+    "key"
+  ],
+  "redeploymentEnabled": true,
+  "name": "com.mycompany:customer-orderapi:1.0.0-SNAPSHOT",
+  "minMuleVersion": "4.3.0",
+  "requiredProduct": "MULE_EE",
+  "classLoaderModelLoaderDescriptor": {
+    "id": "mule",
+    "attributes": {
+      "exportedPackages": [],
+      "exportedResources": [
+        "api/examples/NoIDExample.raml",
+        "api/examples/order_based_on_ID.raml",
+        "api/examples/records_in_the_table.raml",
+        "api/examples/tables_in_the_db.raml",
+        "api/examples/update_order_example.raml",
+        "api/mysql-sapi.raml",
+        "config.xml",
+        "dev-secure.yaml",
+        "dev.yaml",
+        "error-messages.yaml",
+        "globalErrorHandler.xml",
+        "HTTPmule.jks",
+        "log4j2.xml",
+        "mysql-sapi-implementation.xml",
+        "mysql-sapi-interface.xml"
+      ]
+    }
+  },
+  "bundleDescriptorLoader": {
+    "id": "mule",
+    "attributes": {}
+  }
+}

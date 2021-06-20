@@ -1,0 +1,30 @@
+{
+  "configs": [
+    "api.xml"
+  ],
+  "secureProperties": [],
+  "redeploymentEnabled": true,
+  "name": "com.mycompany:test-drive:1.0.0",
+  "minMuleVersion": "4.3.0",
+  "requiredProduct": "MULE_EE",
+  "classLoaderModelLoaderDescriptor": {
+    "id": "mule",
+    "attributes": {
+      "exportedPackages": [],
+      "exportedResources": [
+        "AnypointTemplateLicense.pdf",
+        "api/api.raml",
+        "api/libraries/odataLibrary.raml",
+        "api/odata.raml",
+        "api.xml",
+        "example.sql",
+        "log4j2.xml",
+        "mule-configuration.properties"
+      ]
+    }
+  },
+  "bundleDescriptorLoader": {
+    "id": "mule",
+    "attributes": {}
+  }
+}

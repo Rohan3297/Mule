@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:s3="http://www.mulesoft.org/schema/mule/s3" xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns:tls="http://www.mulesoft.org/schema/mule/tls"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/s3 http://www.mulesoft.org/schema/mule/s3/current/mule-s3.xsd">
+	<configuration-properties doc:name="Configuration properties" doc:id="94197e73-6ab3-4c7d-9c36-fd90d2d4ef32" file="dev.yaml" />
+	<http:listener-config name="HTTPS_Listener_config" doc:name="HTTP Listener config" doc:id="23c2219e-7a9c-41b5-9901-903c56d79cd0" >
+		<http:listener-connection protocol="HTTPS" host="0.0.0.0" port="${https.port}" >
+			<tls:context >
+				<tls:key-store type="jks" path="HTTPS-mule.jks" keyPassword="password" password="password" />
+			</tls:context>
+		</http:listener-connection>
+	</http:listener-config>
+	<file:config name="File_Config" doc:name="File Config" doc:id="be2d076b-599c-4da6-b4d4-2c8709ea4b04" >
+		<file:connection workingDir="${file.path}" />
+	</file:config>
+	<configuration doc:name="Configuration" doc:id="e8676fdf-a732-447b-9ec7-e6063b4734fb" defaultErrorHandler-ref="globalerrorhandler" />
+	<s3:config name="Amazon_S3_Configuration" doc:name="Amazon S3 Configuration" doc:id="d48958d1-dab2-4d41-b60c-5dec7301d6c1" >
+		<s3:basic-connection accessKey="AKIA5OXVSBFKVOQ5IN6I" secretKey="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" region="AP_SOUTH_1" />
+	</s3:config>
+</mule>

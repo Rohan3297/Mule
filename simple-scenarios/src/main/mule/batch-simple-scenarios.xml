@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking"
+	xmlns:xml-module="http://www.mulesoft.org/schema/mule/xml-module"
+	xmlns:batch="http://www.mulesoft.org/schema/mule/batch" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd
+http://www.mulesoft.org/schema/mule/xml-module http://www.mulesoft.org/schema/mule/xml-module/current/mule-xml-module.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<file:config name="File_Config" doc:name="File Config" doc:id="193946e7-3a55-4af9-9bc4-227c5b18086d" >
+		<file:connection workingDir="D:\Batch" />
+	</file:config>
+	<xml-module:config name="XML_Config" doc:name="XML Config" doc:id="8529b6bc-b4c2-450e-8c58-2f6e42dcfdcf" />
+	<file:config name="File_Config1" doc:name="File Config" doc:id="a7895350-b972-4e4f-9515-ecf00a5a43aa" >
+		<file:connection workingDir="D:\Batch\Target" />
+	</file:config>
+	<file:config name="File_Config2" doc:name="File Config" doc:id="03695e46-61b6-42c6-afa2-dabc970654a3" >
+		<file:connection workingDir="D:\Batch\csv" />
+	</file:config>
+	<file:config name="File_Config3" doc:name="File Config" doc:id="dfdeedaf-eb01-4c2f-9f3c-2f8b99770a3b" >
+		<file:connection workingDir="D:\Batch\Source" />
+	</file:config>
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="cdaefc21-a2d8-423e-aee7-08cf7988d574" basePath="/orders" >
+		<http:request-connection host="localhost" port="8081" />
+	</http:request-config>
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="2f01b803-2c5b-4109-9e13-892e2fd3d993" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="batch-simple-scenariosFlow1" doc:id="6a9b7388-263b-47d1-bad4-a250fcdffca8" initialState="stopped">
+		<file:listener doc:name="On New or Updated File" doc:id="201d6758-4ad4-45f4-a890-6193317e7631" config-ref="File_Config" directory="Source" moveToDirectory="Done">
+			<scheduling-strategy >
+				<fixed-frequency />
+			</scheduling-strategy>
+			<file:matcher filenamePattern="*.csv" />
+		</file:listener>
+		<ee:transform doc:name="CSV to Java" doc:id="4f01dcc4-7bee-4581-83af-c9ba0e10b671" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="Java to XML" doc:id="fe9a2f5a-b22c-4e63-a62c-c736fd835d9d">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/xml
+---
+ Orders: {(payload map {
+    Order : {
+        OrderID: $.OrderID,
+        CustomerID: $.CustomerID,
+        OrderStatus: $.OrderStatus,
+        CarrierID: $.CarrierID,
+        OrderRecivedDate: $.OrderRecivedDate,
+        OrderFulfulmentDate: $.OrderFulfulmentDate,
+        Product: {
+            Productid: $.Productid,
+            Qty: $.Qty,
+            ProductPrice: $.ProductPrice
+        }}
+ })}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<batch:job jobName="batch-simple-scenariosBatch_Job1" doc:id="cd4a9697-a511-4079-957f-2de5ff533374" blockSize="10">
+			<batch:process-records >
+				<batch:step name="Batch_Step2" doc:id="845c0465-59b6-4c29-a49c-cf3a81dc5ec3" >
+					<file:write doc:name="Write" doc:id="e22dff00-688e-4665-96df-94b5f5864262" config-ref="File_Config" path="Target/output.xml" mode="APPEND"/>
+					<logger level="INFO" doc:name="Logger" doc:id="a178c3b7-e10c-4b44-8754-fab50c572224" message="In batch step"/>
+				</batch:step>
+			</batch:process-records>
+			<batch:on-complete >
+				<logger level="INFO" doc:name="Logger" doc:id="f6200a1a-719c-44e7-be63-4ad369094e3e" message='Completed'/>
+			</batch:on-complete>
+		</batch:job>
+	</flow>
+	<flow name="batch-simple-scenariosFlow2" doc:id="84769603-36e6-4306-9140-949c8b0d29ef" initialState="stopped">
+		<file:listener doc:name="On New or Updated File" doc:id="bd51d421-eab7-4ee9-b595-4ecbdbb03454" config-ref="File_Config" directory="Source" moveToDirectory="Done">
+			<scheduling-strategy >
+				<fixed-frequency />
+			</scheduling-strategy>
+			<file:matcher filenamePattern="*.csv" />
+		</file:listener>
+		<ee:transform doc:name="CSV to Java" doc:id="40d462bd-d8f5-4cf8-bb59-97c4b919c2ee" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<foreach doc:name="For Each" doc:id="f03a6394-512b-4530-b691-f391356559c5" batchSize="10">
+			<ee:transform doc:name="Java to XML" doc:id="0d3dfbe1-3712-44ae-8ee6-f32d507865b8">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/xml
+---
+ Orders: {(payload map {
+    Order : {
+        OrderID: $.OrderID,
+        CustomerID: $.CustomerID,
+        OrderStatus: $.OrderStatus,
+        CarrierID: $.CarrierID,
+        OrderRecivedDate: $.OrderRecivedDate,
+        OrderFulfulmentDate: $.OrderFulfulmentDate,
+        Product: {
+            Productid: $.Productid,
+            Qty: $.Qty,
+            ProductPrice: $.ProductPrice
+        }}
+ })}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<logger level="INFO" doc:name="Logger" doc:id="8030395b-2a7d-4e5f-b749-9b78dcad091a" message="#[payload]" />
+			<file:write doc:name="Write" doc:id="c05d5c5e-25a4-46ed-8926-b8075406286c" config-ref="File_Config1" path='#["answer" ++ vars.counter ++ ".xml"]' />
+		</foreach>
+		<logger level="INFO" doc:name="Logger" doc:id="aa11f401-cafb-45b9-a9b1-a7b96ad38376" />
+	</flow>
+	<flow name="batch-simple-scenariosFlow3" doc:id="08d8af02-6cda-469d-8eb7-76b137525fef" initialState="stopped">
+		<file:listener doc:name="On New or Updated File" doc:id="ba6501c0-faed-4f4b-bf82-6efce5b51d86" config-ref="File_Config" directory="csv" moveToDirectory="Done">
+			<scheduling-strategy >
+				<fixed-frequency />
+			</scheduling-strategy>
+			<file:matcher filenamePattern="*.csv" />
+		</file:listener>
+		<logger level="INFO" doc:name="Logger" doc:id="cb3040e3-4a91-4ee6-be80-d87de2191938" message="#[payload]" />
+		<ee:transform doc:name="Transform Message" doc:id="8884c670-199f-42f4-a70e-fcef6bcec231">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="Transform Message" doc:id="cd4c3f55-d903-48fb-aee4-d17f644cc8c4">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/csv
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<batch:job jobName="batch-simple-scenariosBatch_Job" doc:id="60ca2a69-2dad-4acf-b837-0e7312a5fb86" >
+			<batch:process-records >
+				<batch:step name="Batch_Step1" doc:id="051ad876-907e-45c5-9eca-b86709b97441" >
+					<file:write doc:name="Write" doc:id="5634acc9-10f6-48c8-8cc9-dbdb455a3723" config-ref="File_Config1" path="out.csv" mode="APPEND" />
+					<logger level="INFO" doc:name="Logger" doc:id="3c13285d-bbfc-41e2-bd53-8faf012ed538" />
+				</batch:step>
+				<batch:step name="Batch_Step2" doc:id="f7fef52f-30ed-407c-a5f0-d4207e2bbcff">
+					<file:read doc:name="Read" doc:id="1693c9cf-e064-43ab-8141-f624aa87ebf2" config-ref="File_Config1" path="out.csv" />
+					<ee:transform doc:name="Transform Message" doc:id="61e72afb-3dcb-4cdb-8160-e38a294806fb">
+						<ee:message>
+							<ee:set-payload><![CDATA[%dw 2.0
+output application/csv
+---
+payload distinctBy $]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+					<file:write doc:name="Write" doc:id="43d15bce-397a-4489-af80-930ecefb17e6" config-ref="File_Config1" path="new.csv" />
+				</batch:step>
+			</batch:process-records>
+			<batch:on-complete >
+				<logger level="INFO" doc:name="Logger" doc:id="f39c59a5-05e0-4d8b-8146-7b3f4daeeb17" />
+			</batch:on-complete>
+		</batch:job>
+		<logger level="INFO" doc:name="Logger" doc:id="1a992f7e-7721-4874-a6ee-48c4d06fbd24" />
+	</flow>
+	<flow name="batch-simple-scenariosFlow" doc:id="c1a5fa69-60b5-47ed-b9f9-24d37a2586f8" initialState="stopped">
+		<file:listener doc:name="On New or Updated File" doc:id="2c1ebb54-892b-4629-baaf-6f503a94694d" config-ref="File_Config" directory="Source" moveToDirectory="Done">
+			<scheduling-strategy >
+				<fixed-frequency />
+			</scheduling-strategy>
+			<file:matcher filenamePattern="*.csv" />
+		</file:listener>
+		<ee:transform doc:name="Transform Message" doc:id="3f3e3610-0a05-4567-9f1a-b9ad44d7b112" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<http:request method="POST" doc:name="Request" doc:id="3c5edbf1-676c-4038-b328-7d0b91568c00" config-ref="HTTP_Request_configuration" path="/order"/>
+	</flow>
+	<flow name="batch-simple-scenariosFlow4" doc:id="795fd68c-b8fd-477e-b5da-3afc3073e4df" initialState="stopped">
+		<http:listener doc:name="Listener" doc:id="d05ec0a4-703b-4a0b-975a-c43cc7e28e94" config-ref="HTTP_Listener_config" path="/orders/*" allowedMethods="POST"/>
+		<ee:transform doc:name="Transform Message" doc:id="6a7f57dd-1cf9-43e5-aca4-e155bfc48611" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml
+---
+ Orders: {(payload map {
+    Order : {
+        OrderID: $.OrderID,
+        CustomerID: $.CustomerID,
+        OrderStatus: $.OrderStatus,
+        CarrierID: $.CarrierID,
+        OrderRecivedDate: $.OrderRecivedDate,
+        OrderFulfulmentDate: $.OrderFulfulmentDate,
+        Product: {
+            Productid: $.Productid,
+            Qty: $.Qty,
+            ProductPrice: $.ProductPrice
+        }}
+ })}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<batch:job jobName="batch" doc:id="28a33301-37e3-4e17-a546-284ad3e5f25f" >
+			<batch:process-records >
+				<batch:step name="Batch_Step" doc:id="dfd1b2b4-ca6a-40b8-81c1-2660b93932ac" >
+					<logger level="INFO" doc:name="Logger" doc:id="52df6b29-b8fc-4a2f-a957-84af7b8959fe" />
+					<file:write doc:name="Write" doc:id="8b40ef67-eb0e-4d6b-afbf-8b7066a1c6b7" config-ref="File_Config1" path="ouut.xml" />
+				</batch:step>
+			</batch:process-records>
+			<batch:on-complete >
+				<logger level="INFO" doc:name="Logger" doc:id="251b31a8-1e46-4c51-971a-f3358e2901ef" />
+			</batch:on-complete>
+		</batch:job>
+	</flow>
+</mule>

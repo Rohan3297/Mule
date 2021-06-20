@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:jms="http://www.mulesoft.org/schema/mule/jms"
+	xmlns:amqp="http://www.mulesoft.org/schema/mule/amqp"
+	xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd 
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/amqp http://www.mulesoft.org/schema/mule/amqp/current/mule-amqp.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd">
+	<http:listener-config name="SAP_HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="6975bfd0-ecd4-48a6-b7e2-3d44f9dd5cb8" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<http:request-config name="SAP_HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="a382c83e-8ff8-462f-a0c3-1b9a3eacd033" basePath="/sap/c4c/odata/v1/c4codataapi">
+		<http:request-connection protocol="HTTPS" host="sandbox.api.sap.com" />
+	</http:request-config>
+	<os:object-store name="waterMarkStore" doc:name="Object store" doc:id="7b65495b-9843-4617-a42c-f83655d17f58" />
+	<flow name="getSAP" doc:id="ee593b55-c410-4bde-aa3c-46a42a00181b" initialState="stopped">
+		<scheduler doc:name="Scheduler" doc:id="e2789f70-6e22-407c-9c19-3058a5c0cd66" >
+			<scheduling-strategy >
+				<fixed-frequency timeUnit="SECONDS" frequency="100"/>
+			</scheduling-strategy>
+		</scheduler>
+		<http:request method="GET" doc:name="SAP_Order_Request" doc:id="5390f606-69b2-49ba-8f9d-f206200217ff" path="/CustomerOrderCollection" config-ref="SAP_HTTP_Request_configuration">
+			<http:headers ><![CDATA[#[output application/java
+---
+{
+	"APIKey" : "q4HCcw7326HIlbajrujgfdlaxvNF2TjK",
+	"Accept" : "application/json"
+}]]]></http:headers>
+			<http:query-params ><![CDATA[#[output application/json
+---
+{
+	"\$top" : "70",
+	"\$select" : "*"
+}]]]></http:query-params>
+		</http:request>
+		<logger level="INFO" doc:name="size" doc:id="7e9e30a1-6f3f-40c1-b4f3-03728c2c7221" message="#[sizeOf(payload)]"/>
+		<ee:transform doc:name="Transform Message" doc:id="35f6d3cd-dbeb-48fa-97fa-988a7494f110" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload.d.results orderBy ((value, key) -> value.ID)]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<http:request method="POST" doc:name="Request" doc:id="1e5b5370-15de-4688-acc5-8ef82b0ab03a" config-ref="DatawareHouseHTTP_Request_configuration" path="/Order" />
+		<logger level="INFO" doc:name="Logger" doc:id="ecbec4ab-e3d9-494a-8343-1a007a005e62" message="#[payload]" />
+	
+</flow>
+	<flow name="Copy_of_implementationFlow" doc:id="edd99804-e77f-4fd2-828c-f7d158d80b1e" >
+		<http:listener doc:name="Listener" doc:id="d89f6358-4b2b-4173-9c7a-2dbfa1d63b90" config-ref="SAP_HTTP_Listener_config" path="/getSAP"/>
+		<set-variable value="10" doc:name="top" doc:id="cef37116-947c-4830-a067-25fc34ffd597" variableName="top"/>
+		<os:retrieve doc:name="Retrieve" doc:id="e3c61718-9fa3-4add-bad5-83f37dc3c597" key="skip" target="skip" objectStore="waterMarkStore">
+			<os:default-value ><![CDATA[#[0]]]></os:default-value>
+		</os:retrieve>
+		<http:request method="GET" doc:name="Request" doc:id="1db530de-5ac7-44ed-bf3d-728ebd1f6a67" config-ref="SAP_HTTP_Request_configuration" path="/CustomerOrderCollection" >
+			<http:headers ><![CDATA[#[output application/java
+---
+{
+	"APIKey" : "q4HCcw7326HIlbajrujgfdlaxvNF2TjK",
+	"Accept" : "application/json"
+}]]]></http:headers>
+			<http:query-params ><![CDATA[#[output application/json
+---
+{
+	"\$top" : "10",
+	//"\$skip" : vars.skip,
+	"\$select" : "ID,BuyerPartyName,DateTime,ReplicationProcessingStatusCodeText,GrossAmount"
+	}]]]></http:query-params>
+		</http:request>
+		<logger level="INFO" doc:name="size" doc:id="30caa70f-e885-4c73-b5a4-a113527e05ac" message="#[sizeOf(payload.d.results)]" />
+		<os:store doc:name="Store" doc:id="eb4aa207-4305-490e-95e4-73cf0cdbfcb0" key="skip" objectStore="waterMarkStore">
+			<os:value ><![CDATA[#[vars.skip as Number + 5]]]></os:value>
+		</os:store>
+		<os:clear doc:name="Clear" doc:id="74a21ea2-9a87-4355-b620-75b8cb574a55" objectStore="waterMarkStore"/>
+		<logger level="INFO" doc:name="Logger" doc:id="0b179198-daaf-4e55-b17f-9d0f7fe2440d" message="#[sizeOf(payload)]"/>
+		<ee:transform doc:name="Transform Message" doc:id="eb70fd3d-0311-46de-a7e9-597c070b4850" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload.d.results map(object,index)->{
+	source: "SAP",
+	OrderId: object.ID,
+	customerName: object.BuyerPartyName, 
+	orderStatus: object.ReplicationProcessingStatusCodeText,
+	orderReceivedDate: object.DateTime,
+	amount: object.GrossAmounts
+}
+ 
+
+
+//orderBy ((value, key) -> value.ID)]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="implementationFlow1" doc:id="37cd8bc5-40d7-401b-9741-e768ceb018e8" >
+		<jms:listener doc:name="On New Message" doc:id="b7670e32-c7ee-4b0e-ac95-acbbd0b769ea" config-ref="JMS_Config" destination="in">
+			<jms:response outboundContentType="application/text" />
+		</jms:listener>
+		<logger level="INFO" doc:name="Logger" doc:id="ccd8e329-e3bd-4bae-bdcb-b7af17563905" message="#[payload]"/>
+	</flow>
+</mule>
+

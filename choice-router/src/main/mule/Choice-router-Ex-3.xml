@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
+	<file:config name="File_Config1" doc:name="File Config" doc:id="50c11ab6-778f-45f5-b905-f7a203dc52df" >
+		<file:connection workingDir="D:\Batch" />
+	</file:config>
+	<file:config name="File_Config2" doc:name="File Config" doc:id="ec5f05c8-bd63-4c54-a251-0d28d2c635a0" >
+		<file:connection workingDir="D:\Batch\ChoiceTest" />
+	</file:config>
+	<flow name="Choice-router-Ex-3Flow" doc:id="5e35de96-bab0-450b-9b87-6ad235af8ac5" >
+		<scheduler doc:name="Scheduler" doc:id="cf1a652d-0d41-4029-82a6-6bca85e06d3d">
+			<scheduling-strategy>
+				<fixed-frequency frequency="1" timeUnit="MINUTES" />
+			</scheduling-strategy>
+		</scheduler>
+		<file:list doc:name="List" doc:id="451d1f5d-ca15-4fff-8629-209054df8475" config-ref="File_Config1" directoryPath="ChoiceTest" recursive="true">
+			<file:matcher filenamePattern="*.txt" />
+		</file:list>
+		<choice doc:name="Choice" doc:id="8a461a4a-52b2-4c17-97d5-ef776d49aa9b" >
+			<when expression='#[sizeOf(payload) == 0]'>
+				<logger level="INFO" doc:name="Logger" doc:id="022397a4-9ef1-4428-9faa-101274afc951" message="No file exists in ChoiceTest directory"/>
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="Logger" doc:id="66be531f-2217-47d8-8b87-3d5c4dccf589" message="If directory contains files"/>
+				<foreach doc:name="For Each" doc:id="f3182f14-c269-4182-9848-85bb65683004" >
+					<file:read doc:name="Read" doc:id="cdedaf70-1c78-4ff2-b513-3bd920c77e9f" config-ref="File_Config2" path='#[attributes.fileName]' />
+					<choice doc:name="Choice" doc:id="d5101198-b99a-4ad8-887b-a375fc23ec72">
+					<when expression="#[sizeOf(payload) == 0]">
+						<logger level="INFO" doc:name="Logger" doc:id="b1ebfa4d-08f6-4fe9-ba86-581645c92845" message='#[attributes.fileName ++ "File exists with 0 records"]' />
+					</when>
+					<otherwise>
+						<logger level="INFO" doc:name="Logger" doc:id="c38571b1-b160-4188-b0af-69473cbaf95e" message="#[payload]"/>
+					</otherwise>
+				</choice>
+				</foreach>
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="Logger" doc:id="2a01a8ed-efe0-405c-ae89-3199131368bf" message="Completed"/>
+	</flow>
+</mule>

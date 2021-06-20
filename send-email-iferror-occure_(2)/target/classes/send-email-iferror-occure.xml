@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:email="http://www.mulesoft.org/schema/mule/email"
+	xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="send-email-iferror-occureFlow" doc:id="a8c6706b-3025-45c7-a75e-e31a3360fe3b" >
+		<http:listener doc:name="/file" doc:id="0710edd0-81eb-4737-84ba-9fbb1195197b" path="/file" config-ref="HTTP_Listener_config"/>
+		<file:list doc:name="File List " doc:id="d1b2b249-c681-4479-9e9f-bfabb80f52d9" config-ref="File_Config" directoryPath="readFile"/>
+		<choice doc:name="Choice" doc:id="69c40b51-eb72-4f3a-974e-9796d508b9ee" >
+			<when expression="#[sizeOf(payload) == 0]">
+				<email:send doc:name="Send" doc:id="a2ee3135-bf9c-4235-aee5-436a26515712" fromAddress="${mail.fromAdd}" subject="${mail.subject}" config-ref="Email_SMTP">
+					<email:to-addresses>
+						<email:to-address value="${mail.toAdd}" />
+					</email:to-addresses>
+					<email:body contentType="text/plain">
+						<email:content><![CDATA[${mail.content}]]></email:content>
+					</email:body>
+					<email:attachments><![CDATA[#[{
+	"error.txt" : "There is no file in directory"
+}]]]></email:attachments>
+				</email:send>
+				<logger level="INFO" doc:name="send Error mail" doc:id="fe498a88-30d1-42e4-bda1-75e91c0b77e6" message="***************send Error mail*************" />
+				<set-variable value="#[p('message.message2')]" doc:name="message" doc:id="846f0592-a6e9-454f-889f-7f64299ee6d3" variableName="message"/>
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="List contains file" doc:id="35bbe6bf-960c-4525-98d2-037497eea2fe" message="***********List contains file*********"/>
+				<set-variable value='#[""]' doc:name="message " doc:id="ec1a2cad-a313-45bd-a3b7-b90ae46ce341" variableName="message"/>
+				<foreach doc:name="For Each" doc:id="ddf300be-2104-4c6e-abfe-6fc71792b4f2" >
+					<file:read doc:name="Read file" doc:id="daf20da5-5a34-4866-b703-417c4c64e515" path="#[attributes.fileName]" config-ref="File_Config1" target="orderData"/>
+					<ee:transform doc:name="Json payload" doc:id="54ad6ee9-5de1-4c53-b8b9-8f3ff39dc013" >
+						<ee:message >
+							<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+					<choice doc:name="Choice" doc:id="183364e3-0228-4b3e-b0ff-6faded40c175" >
+						<when expression='#[payload.Amount contains("0")]'>
+							<ee:transform doc:name="filter 0 amount record" doc:id="09c2f7c6-0769-46d7-ada7-9d1975933866">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/csv
+---
+payload filter ((item, index) -> (item.Amount < 1))]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+							<email:send doc:name="Send" doc:id="d49e0edb-0971-4e7d-905b-cf2c5bd2cae2" fromAddress="${mail.fromAdd}" config-ref="Email_SMTP" subject="${mail.subject}">
+					<email:to-addresses>
+						<email:to-address value="${mail.toAdd}" />
+					</email:to-addresses>
+					<email:body contentType="text/plain">
+						<email:content><![CDATA[${mail.content}]]></email:content>
+					</email:body>
+					<email:attachments><![CDATA[#[{
+	"error.csv":payload
+}]]]></email:attachments>
+				</email:send>
+							<logger level="INFO" doc:name="Send Mail with 0 records" doc:id="086300fa-8b0f-4c61-93ec-5ab86ebd2ee1" message="*********Mail with 0 records**********" />
+							<set-variable value="#[p('message.message1')]" doc:name="message" doc:id="da2351ba-9066-47f2-bba1-10c5ec039eb6" variableName="message"/>
+						</when>
+						<otherwise >
+							<logger level="INFO" doc:name="Records without 0 amount" doc:id="f4ce3a2d-fbe0-40af-a8db-d086f234febb" message="*********Records without 0 amount***********"/>
+							<set-variable value="#[vars.orderData]" doc:name="message" doc:id="08a97c40-9c3a-4370-9505-e4cec5d7aac3" variableName="message"/>
+						</otherwise>
+					</choice>
+				</foreach>
+			</otherwise>
+		</choice>
+		<ee:transform doc:name="json message" doc:id="0b6a0d86-bbf0-4956-acd6-d20fb6524391">
+								<ee:message>
+									<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message": vars.message
+}]]></ee:set-payload>
+								</ee:message>
+							</ee:transform>
+		<logger level="INFO" doc:name="Log message" doc:id="4b027109-19c7-464c-9e8b-ce1fe270ad11" message="#[payload]"/>
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="073a4def-e659-4cd4-a241-94a54bef50a8" type="EMAIL:CONNECTIVITY">
+				<ee:transform doc:name="Transform Message" doc:id="c5c83310-49f0-4490-9b3b-77570f26972d" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{
+	"message": error.description 
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</on-error-continue>
+		</error-handler>
+	</flow>
+</mule>

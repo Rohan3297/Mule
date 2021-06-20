@@ -1,0 +1,21 @@
+http:
+  port: "8081"
+  
+file:
+  path: "D:/Mule Soft/Source_folder/"
+  path2: "D:/Mule Soft/Source_folder/readFile"
+  
+mail: 
+  host: "smtp.gmail.com"
+  port: "587"
+  user: "ashleshanalawade14@gmail.com"
+  subject: "Error Record"
+  content: "Kindly check the Attached file wich contains the error data. \n
+            Regards, \n
+            ABC"
+  fromAdd: "ashleshanalawade14@gmail.com"
+  toAdd:  "ashleshanalawade14@gmail.com"
+  
+message:
+  message1: "Mail send with error Message"
+  message2: "Mail send for no files in directory"

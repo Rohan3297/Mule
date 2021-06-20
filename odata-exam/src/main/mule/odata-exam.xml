@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="d792da54-6744-491b-9bf7-b5e5bb11fdc3" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<validation:config name="Validation_Config" doc:name="Validation Config" doc:id="5e644e3b-ec58-4ec4-8685-2535d0b2facb" />
+	<flow name="odata-examFlow" doc:id="4bec1418-75ea-4a10-8d03-9da86fc8e5db" >
+		<http:listener doc:name="Listener" doc:id="bc8d4587-845e-435e-b53d-ad9e0279819e" config-ref="HTTP_Listener_config" path="/odata"/>
+		<set-variable value="#[attributes.queryParams.etype]" doc:name="etype" doc:id="ca20e629-ff24-44bf-abc5-1dbae171cb2c" variableName="etype" />
+		<try doc:name="Try" doc:id="d8e5202a-5017-4e42-93d1-9027ef9bf771" >
+			<validation:is-not-null doc:name="Is not null" doc:id="46b51c17-74ae-4f94-bfc4-3af1945a1700" value="#[vars.etype]" message="is Null" />
+			<error-handler >
+				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="eea210a2-cbba-4c6e-966f-8581896f56a2" type="VALIDATION:NULL">
+					<set-variable value="Orders" doc:name="etype" doc:id="2ca4358b-dac2-40c8-bffe-63f510486b87" variableName="etype"/>
+				</on-error-continue>
+			</error-handler>
+		</try>
+		<logger level="INFO" doc:name="Logger" doc:id="ff304e2d-e16c-4e89-9fc8-9fd514f30c62" />
+		<http:request method="GET" doc:name="Request" doc:id="b87a075f-cfc7-4735-8037-65d084fffe70" url="#['https://services.odata.org/Experimental/Northwind/Northwind.svc/' ++ vars.etype]"/>
+		<logger level="INFO" doc:name="Logger" doc:id="2321bffe-0ce8-4e5b-9bc1-c0fd1ef58a40" />
+	</flow>
+</mule>

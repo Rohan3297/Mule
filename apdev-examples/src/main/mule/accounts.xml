@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:batch="http://www.mulesoft.org/schema/mule/batch" xmlns:jms="http://www.mulesoft.org/schema/mule/jms"
+	xmlns:os="http://www.mulesoft.org/schema/mule/os"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd">
+	<flow name="receiveJMSMessages" doc:id="0ac23b13-c0e5-4460-84c8-cafd3413f48d" >
+		<jms:listener doc:name="JMSaccountsQ" doc:id="79719c0d-3705-4b73-a19e-47b1912c315b" config-ref="JMS_Config" destination="accountsQ">
+			<jms:consumer-type >
+				<jms:queue-consumer />
+			</jms:consumer-type>
+		</jms:listener>
+		<ee:transform doc:name="JSON to Accounts" doc:id="76c19e64-45a1-4fa8-bc48-c17340ea6a9e" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload map ( payload01 , indexOfPayload01 ) -> {
+    Name: payload01.name,
+    BillingStreet: payload01.street,
+    BillingCity: (payload01.city default ""),
+    BillingState: payload01.state,
+    BillingPostalCode: payload01.postal,
+    BillingCountry: payload01.country
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<batch:job jobName="syncWithSalesforce" doc:id="ad383bc0-cbc2-42cb-a6ad-e27bbed3109f" >
+			<batch:process-records >
+				<batch:step name="isAccountInSalesforce" doc:id="c4e85b5f-8166-41f0-b80b-1f6e9d761717" >
+					<salesforce:query doc:name="Account" doc:id="232ee9a9-6563-47e3-b67c-6a4d77cc5667" config-ref="Salesforce_Config" target="exists" targetValue="#[(sizeOf(payload as Array) &gt; 0)]">
+						<salesforce:salesforce-query ><![CDATA[SELECT Name FROM Account WHERE Name= ':cname']]></salesforce:salesforce-query>
+						<salesforce:parameters ><![CDATA[#[output application/java
+---
+{
+	"cname" : payload.Name default "" as String
+}]]]></salesforce:parameters>
+					</salesforce:query>
+					<logger level="INFO" doc:name="Logger" doc:id="01733a44-a774-48a8-b621-e011dcdb576d" />
+				</batch:step>
+				<batch:step name="writeToSalesforce" doc:id="50e79d4d-bee3-45f8-bcda-ca5235669119" acceptExpression="#[not vars.exists]">
+					<batch:aggregator doc:name="Batch Aggregator" doc:id="d86f50c8-fe79-4d2e-9f79-e1e108194754" size="3">
+						<salesforce:create type="Account" doc:name="Accounts" doc:id="09b9040e-dddb-4ea8-8bc7-ec4c0d54a2e2" config-ref="Salesforce_Config" />
+						<logger level="INFO" doc:name="Logger" doc:id="a18a681a-8018-4953-8736-43bd0686dde1" />
+					</batch:aggregator>
+				</batch:step>
+			</batch:process-records>
+			<batch:on-complete >
+				<logger level="INFO" doc:name="Logger" doc:id="7557c85c-46dc-451d-843c-738aadf7a336" />
+			</batch:on-complete>
+		</batch:job>
+		<logger level="INFO" doc:name="payload" doc:id="f9e1da40-4c95-465b-95b7-a0ea12c9f2ef" message="#[payload]"/>
+	</flow>
+	<flow name="syncDBaccountsWithPostal" doc:id="5ee0c43e-4a9d-43e6-bfd8-d0258f58a7c0" initialState="started">
+		<scheduler doc:name="Scheduler" doc:id="61306af6-710b-4557-88af-10f6168c5c45" >
+			<scheduling-strategy >
+				<fixed-frequency frequency="10" timeUnit="SECONDS"/>
+			</scheduling-strategy>
+		</scheduler>
+		<os:retrieve doc:name="lastAccountID" doc:id="171e8590-5609-49e2-be06-e6ea0cb73ff2" key="lastAccountID" target="lastAccountID">
+			<os:default-value ><![CDATA[0]]></os:default-value>
+		</os:retrieve>
+		<db:select doc:name="accounts" doc:id="ce5ba373-f36c-4fb7-8a8d-8071676455c6" config-ref="Database_Config">
+			<db:sql ><![CDATA[SELECT * FROM accounts WHERE postal =:postal AND accountID > :lastAccountID]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{postal: '411017', lastAccountID: vars.lastAccountID}]]]></db:input-parameters>
+		</db:select>
+		<choice doc:name="Choice" doc:id="d702f22e-76b7-4bca-ad55-e149062dccb4" >
+			<when expression="#[not isEmpty(payload)]">
+				<os:store doc:name="lastAccountID" doc:id="86d38536-1fe9-405e-bc7b-f26713b0db5f" key="lastAccountID">
+			<os:value><![CDATA[#[max(payload.*accountID)]]]></os:value>
+		</os:store>
+				<file:write doc:name=" DBaccountsPostal.csv" doc:id="9ae50367-fabb-45b4-9dfa-1dbfc17a3af6" config-ref="File_Config" path="output/DBaccountsPostal.csv" mode="APPEND">
+			<file:content><![CDATA[#[output application/csv header=false --- payload]]]></file:content>
+		</file:write>
+				<jms:publish doc:name="JMSaccountsQ" doc:id="d5313396-562e-4d38-acb7-d2b5e1cd0133" config-ref="JMS_Config" destination="accountsQ">
+					<jms:message >
+						<jms:body ><![CDATA[#[output application/json --- payload]]]></jms:body>
+						<jms:properties ><![CDATA[#[{"publisher":"training"}]]]></jms:properties>
+					</jms:message>
+				</jms:publish>
+				<logger level="INFO" doc:name="CSV payload" doc:id="23bacbf0-2768-4e9c-80d6-ee030b07033d" message="#[output application/csv --- payload]" />
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="No new records" doc:id="9be2eada-aa40-4970-a1b8-3f434341913c" message="No new records"/>
+			</otherwise>
+		</choice>
+	</flow>
+	<flow name="syncDBaccountsToCSV" doc:id="ec5c769d-5bc2-4dad-9a9b-5b9d06241857" initialState="stopped">
+		<db:listener doc:name="accounts" doc:id="2875fe3f-08f7-4a68-a3e3-495d49e97c43" config-ref="Database_Config" table="accounts" watermarkColumn="accountID" idColumn="accountID">
+			<scheduling-strategy >
+				<fixed-frequency frequency="10" timeUnit="SECONDS"/>
+			</scheduling-strategy>
+		</db:listener>
+		<ee:transform doc:name="Java to CSV" doc:id="d0635a2b-ab95-4764-a92f-d3493e2f65e6" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/csv header=false
+---
+[payload]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<file:write doc:name="DBaccounts.csv" doc:id="329c1a27-4396-445e-9aed-74e4251a7779" config-ref="File_Config" path="output/DBaccounts.csv" mode="APPEND"/>
+		<logger level="INFO" doc:name="payload" doc:id="fd1f3db7-85d2-4f80-b72f-0128e56424c9" message="#[payload]"/>
+	</flow>
+	<flow name="batchProcessCSVaccounts" doc:id="a615e5a5-06da-4a5a-b170-0fbdb47470d6" >
+		<file:listener doc:name="accounts.csv" doc:id="410636f2-9c52-4287-a484-fd8041f977de" config-ref="File_Config" directory="input" moveToDirectory="output">
+			<scheduling-strategy >
+				<fixed-frequency />
+			</scheduling-strategy>
+			<file:matcher filenamePattern="*.csv" />
+		</file:listener>
+		<ee:transform doc:name="CSV to Java" doc:id="4d316d8d-b9b6-4bae-90f4-8f2e3ced3529" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<set-variable value="#[sizeOf(payload)]" doc:name="size" doc:id="2e7792b5-9a36-42ab-8a1f-6be57713a9bd" variableName="size"/>
+		<batch:job jobName="accountsBatch_Job" doc:id="9ea53543-f8ee-47c8-aa0c-48ab79848eff" >
+			<batch:process-records >
+				<batch:step name="Batch_Step" doc:id="9031b813-00ec-4435-b698-8eca3e88b22b" >
+					<set-variable value="#[payload.Name]" doc:name="cname" doc:id="9e3993b4-930f-44f3-b262-1a4d5ca8ec80" variableName="cname"/>
+					<logger level="INFO" doc:name="Logger" doc:id="5f394667-bb6b-427a-8151-dae718c8c835" />
+				</batch:step>
+				<batch:step name="Batch_Step1" doc:id="bdb4f3cf-57bd-404a-b5ad-76382cadb1bc" >
+					<logger level="INFO" doc:name="Logger" doc:id="d886445e-db0e-456c-b67b-18078f8ad28f" />
+				</batch:step>
+			</batch:process-records>
+			<batch:on-complete >
+				<logger level="INFO" doc:name="Logger" doc:id="a3bec186-137f-4b54-83e4-19d60bd237eb" />
+			</batch:on-complete>
+		</batch:job>
+	</flow>
+	<flow name="getCSVaccounts" doc:id="48b3e55d-4515-4483-a526-da2eff4d4a5c" initialState="stopped">
+		<file:listener doc:name="accounts.csv" doc:id="c5e4f748-61f5-4ebc-aef6-23fb75b27ef5" config-ref="File_Config" directory="input" moveToDirectory="output">
+			<scheduling-strategy >
+				<fixed-frequency />
+			</scheduling-strategy>
+			<file:matcher filenamePattern="*.csv" />
+		</file:listener>
+		<ee:transform doc:name="CSV to Java" doc:id="aa955e40-c633-448f-9148-9823041441b9" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<foreach doc:name="For Each" doc:id="fd4d051d-d95f-4c66-840e-7d1b02470ee0" >
+			<set-payload value="processed" doc:name="processed" doc:id="857333a7-e25e-40f8-a146-da023a4832a6" />
+			<logger level="INFO" doc:name="payload" doc:id="da08f134-b76a-4272-adc0-7f1b1082ecfe" message="#[payload]"/>
+		</foreach>
+		<logger level="INFO" doc:name="payload" doc:id="f2ca7472-2aa4-4c85-b227-7cfd53320c47" message="#[payload]"/>
+	</flow>
+	<flow name="getSFDCaccounts" doc:id="6bbf8c81-fd1c-4010-ac6d-d76c165ed4f7" >
+		<http:listener doc:name="GET /sfdc" doc:id="1d91fbe9-6ddb-4d56-b60b-bdf43c1dece8" config-ref="HTTP_Listener_config" path="/sfdc"/>
+		<salesforce:query doc:name="Account" doc:id="56cfb92c-c8c4-4d6d-81f3-ec248aba69fd" config-ref="Salesforce_Config">
+			<salesforce:salesforce-query ><![CDATA[SELECT Name, LastModifiedDate, BillingPostalCode
+FROM Account]]></salesforce:salesforce-query>
+		</salesforce:query>
+		<ee:transform doc:name="Transform Message" doc:id="0b5184b4-eeaa-4a56-8b7b-27103e161628" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>

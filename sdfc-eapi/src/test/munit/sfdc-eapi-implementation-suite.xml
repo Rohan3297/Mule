@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="sfdc-eapi-implementation-suite.xml" />
+	<munit:test name="getSFDCdata-test" doc:id="b9abfd24-04a2-4424-a53d-3d25c6e72a6e" >
+		<munit:behavior >
+			<munit-tools:mock-when doc:name="Mock POST request to SAPI" doc:id="637766b0-306c-4d22-91ca-b67ab6ae6df2" processor="http:request">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="f4fe9de8-4f7d-4800-85a1-1fbeabc957cb" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return >
+					<munit-tools:payload value="#[output application/json --- readUrl('classpath://getSFDCdatatest\mock_payload.dwl')]" mediaType="application/json" encoding="UTF-8" />
+					<munit-tools:attributes value="#[readUrl('classpath://getSFDCdatatest\mock_attributes.dwl')]" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<munit-tools:spy doc:name="Spy After request" doc:id="dcd81848-9abf-4736-8b15-695c3dbbabc0" processor="logger">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="2e285310-9150-41c6-a666-a471fe8144ad" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:before-call >
+					<munit-tools:assert doc:name="Assert payload" doc:id="0aa29c6d-2928-416e-bd94-53643426bd56" message="The payload does not match">
+						<munit-tools:that ><![CDATA[#[%dw 2.0
+import getSFDCdatatest::spy_assert_payload
+---
+spy_assert_payload::main({payload: payload, attributes: attributes, vars: vars})]]]></munit-tools:that>
+					</munit-tools:assert>
+				</munit-tools:before-call>
+				<munit-tools:after-call >
+					<munit-tools:assert doc:name="Assert payload" doc:id="c566cb60-61f4-4dde-b319-c540ae8fbb9b" message="The payload does not match">
+						<munit-tools:that ><![CDATA[#[%dw 2.0
+import getSFDCdatatest::spy_assert_payload1
+---
+spy_assert_payload1::main({payload: payload, attributes: attributes, vars: vars})]]]></munit-tools:that>
+					</munit-tools:assert>
+				</munit-tools:after-call>
+			</munit-tools:spy>
+			<munit-tools:spy doc:name="Spy payload to be send" doc:id="f0d82ccb-6f52-4872-85c7-ffb05bc61ac2" processor="logger">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="d2b9d6bb-7cfb-4c5e-8951-d8fa8e6c4ac2" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:before-call >
+					<munit-tools:assert doc:name="Assert payload" doc:id="55893ce5-79c3-480f-9881-74da020823df" message="The payload does not match">
+						<munit-tools:that ><![CDATA[#[%dw 2.0
+import getSFDCdatatest::spy_assert_payload2
+---
+spy_assert_payload2::main({payload: payload, attributes: attributes, vars: vars})]]]></munit-tools:that>
+					</munit-tools:assert>
+				</munit-tools:before-call>
+				<munit-tools:after-call >
+					<munit-tools:assert doc:name="Assert payload" doc:id="a7b94299-5b0b-4259-b161-961dfbd26acc" message="The payload does not match">
+						<munit-tools:that ><![CDATA[#[%dw 2.0
+import getSFDCdatatest::spy_assert_payload3
+---
+spy_assert_payload3::main({payload: payload, attributes: attributes, vars: vars})]]]></munit-tools:that>
+					</munit-tools:assert>
+				</munit-tools:after-call>
+			</munit-tools:spy>
+			<munit-tools:spy doc:name="Spy Java to JSON" doc:id="023acd31-903b-422c-a4f0-94ff22ddfd0b" processor="ee:transform">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="9bb9912f-8d18-483a-b095-b631753c7ec8" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+				<munit-tools:before-call >
+					<munit-tools:assert doc:name="Assert payload" doc:id="bcf0ec39-e3b9-4fc9-8d8a-86374b0cdd79" message="The payload does not match">
+						<munit-tools:that ><![CDATA[#[%dw 2.0
+import getSFDCdatatest::spy_assert_payload4
+---
+spy_assert_payload4::main({payload: payload, attributes: attributes, vars: vars})]]]></munit-tools:that>
+					</munit-tools:assert>
+				</munit-tools:before-call>
+				<munit-tools:after-call >
+					<munit-tools:assert doc:name="Assert payload" doc:id="cf936d38-4392-48e1-af6c-5ad749fedb5d" message="The payload does not match">
+						<munit-tools:that ><![CDATA[#[%dw 2.0
+import getSFDCdatatest::spy_assert_payload5
+---
+spy_assert_payload5::main({payload: payload, attributes: attributes, vars: vars})]]]></munit-tools:that>
+					</munit-tools:assert>
+				</munit-tools:after-call>
+			</munit-tools:spy>
+			<munit:set-event doc:name="Set Input" doc:id="5893155b-5a49-4a99-ae1f-7ed3ef4217eb" >
+				<munit:payload value="#[output application/java --- readUrl('classpath://getSFDCdatatest\set-event_payload.dwl')]" encoding="UTF-8" mediaType="application/java" />
+			</munit:set-event>
+		</munit:behavior>
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to getSFDCdata" doc:id="cf25e0bc-63af-4106-bc35-d06b238b06f0" name="getSFDCdata"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert doc:name="Assert payload" doc:id="39b165be-c0da-4c6b-88bf-ceb5481ffe2e" message="The payload does not match">
+				<munit-tools:that ><![CDATA[#[%dw 2.0
+import getSFDCdatatest::assert_expression_payload
+---
+assert_expression_payload::main({payload: payload, attributes: attributes, vars: vars})]]]></munit-tools:that>
+			</munit-tools:assert>
+			<munit-tools:verify-call doc:name="Verify After request" doc:id="c8e19eb0-6777-4846-b35e-433ff4fcecbe" processor="logger" times="1">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="2e285310-9150-41c6-a666-a471fe8144ad" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+			</munit-tools:verify-call>
+			<munit-tools:verify-call doc:name="Verify payload to be send" doc:id="f4078ca1-eae7-4531-9f35-51161bac6cf9" processor="logger" times="1">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="d2b9d6bb-7cfb-4c5e-8951-d8fa8e6c4ac2" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+			</munit-tools:verify-call>
+			<munit-tools:verify-call doc:name="Verify Java to JSON" doc:id="b824ff08-d2ac-4e1c-bb7c-5176a541c5d5" processor="ee:transform" times="1">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="9bb9912f-8d18-483a-b095-b631753c7ec8" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+			</munit-tools:verify-call>
+		</munit:validation>
+	</munit:test>
+
+
+</mule>

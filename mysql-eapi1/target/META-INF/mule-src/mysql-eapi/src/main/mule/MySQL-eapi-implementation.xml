@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="putData" doc:id="bb94401e-a60b-47c9-8fdc-aa906eeaaad8" >
+		<logger level="INFO" doc:name="Logger" doc:id="8374879d-b17a-4dbc-9f94-1307274080e7" />
+		<http:request method="PUT" doc:name="Request" doc:id="9a13ba8a-9d23-44ba-be72-17ac6150990b" config-ref="HTTP_Request_configuration" path='#["/database/SBFWOa2sno/table/" ++ message.attributes.uriParams.tableName ++ "/" ++ message.attributes.uriParams.ID]' responseTimeout="1000"/>
+		<logger level="INFO" doc:name="Logger" doc:id="a1019b80-7b9a-4aae-9362-021cdf6568d6" />
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="786799fc-2b16-48d3-92eb-798770d0126c" type="HTTP:BAD_REQUEST">
+				<ee:transform doc:name="Transform Message" doc:id="68c472a9-4bda-496a-8808-b6a42b0c84f7" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message": error.description
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</on-error-continue>
+		</error-handler>
+	
+</flow>
+	<flow name="deleteData" doc:id="0d6a342d-47a3-4878-8009-2698f833522c" >
+		<logger level="INFO" doc:name="Logger" doc:id="a4c4ced1-3408-461f-aaa2-6c104d17bf7e" />
+		<http:request method="DELETE" doc:name="Request" doc:id="1b440786-f96e-4374-a1a2-1707edc66a94" config-ref="HTTP_Request_configuration" path='#["/database/SBFWOa2sno/table/" ++ message.attributes.uriParams.tableName ++ "/" ++ message.attributes.uriParams.ID]' responseTimeout="1000"/>
+		<logger level="INFO" doc:name="Logger" doc:id="41256c78-a5a9-4629-8526-8ac385711050" />
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="a2d833c6-35cc-4cac-9d35-4ffd40d79122" type="HTTP:BAD_REQUEST" >
+				<ee:transform doc:name="Transform Message" doc:id="31ffafb8-29e5-491d-84a1-0ba28175b234" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message": error.description
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</on-error-continue>
+		</error-handler>
+	
+</flow>
+	<flow name="getTables" doc:id="7d894065-a0ee-4a82-aa4b-9a4ff0b50573" >
+		<logger level="INFO" doc:name="Logger" doc:id="1a08d573-4adb-49b0-9735-49575a0c7ffd" />
+		<http:request method="GET" doc:name="Request" doc:id="66e71680-3abb-4df9-a099-b90a2da6dbd1" config-ref="HTTP_Request_configuration" path="/database/SBFWOa2sno" responseTimeout="1000"/>
+		<logger level="INFO" doc:name="Logger" doc:id="c694eeaf-f1f6-476e-a7b8-485ca42a0b98" />
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="c499f465-1e4b-4499-9c60-ff2d38b248a5" type="HTTP:BAD_REQUEST" >
+				<set-variable value="" doc:name="status" doc:id="bec8875f-f783-453d-a882-1d0dd3297d4b" variableName="status"/>
+				<ee:transform doc:name="Transform Message" doc:id="3af14494-9e40-448d-a662-82003da33893" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message": error.description
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</on-error-continue>
+		</error-handler>
+	
+</flow>
+	<flow name="getData" doc:id="cb487bae-d56a-41c5-907d-636fdf307124" >
+		<logger level="INFO" doc:name="Logger" doc:id="5b9bfdf5-e0d4-42be-98a3-99b2a0d11650" />
+		<http:request method="GET" doc:name="Request" doc:id="48925480-f3fb-4863-a18a-ba77638d954e" config-ref="HTTP_Request_configuration" path='#["/database/SBFWOa2sno/table/" ++ message.attributes.uriParams.tableName]' responseTimeout="1000">
+		</http:request>
+		<logger level="INFO" doc:name="Logger" doc:id="c5166916-0a60-443b-93fa-238d8e1d73b2" />
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="f052c184-b048-4c21-81bf-b82f72722bfa" type="HTTP:BAD_REQUEST" >
+				<ee:transform doc:name="Transform Message" doc:id="1e3534fc-d2c6-434e-a82e-aa3307359ba9" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message": error.description
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</on-error-continue>
+			
+		</error-handler>
+	
+</flow>
+	<flow name="getDataID" doc:id="0517e8f7-e91e-4777-a532-de9e01a02120" >
+		<logger level="INFO" doc:name="Logger" doc:id="e7ada993-4374-4c83-a275-380bed14083c" />
+		<http:request method="GET" doc:name="Request" doc:id="88209ebc-f8a1-498d-b9e9-339cb9c5c0b3" config-ref="HTTP_Request_configuration" path='#["/database/SBFWOa2sno/table/" ++ message.attributes.uriParams.tableName ++ "/" ++ message.attributes.uriParams.ID]' responseTimeout="1000"/>
+		<logger level="INFO" doc:name="Logger" doc:id="7d7c7532-0004-40d6-b30c-8c7cc188eb1e" />
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="b0837584-1d17-47e7-a851-15645de03a7b" type="HTTP:BAD_REQUEST" >
+				<ee:transform doc:name="Transform Message" doc:id="4c7e4762-08ff-4ff1-b8ac-c10bcc115d3e" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message": error.description
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</on-error-continue>
+		</error-handler>
+	
+</flow>
+	<flow name="postData" doc:id="83e92258-5d66-4218-8a6e-b3ba341633bf" >
+		<logger level="INFO" doc:name="Logger" doc:id="c5ae3cf2-6423-4214-9aac-8ab73fc8073e" />
+		<http:request method="POST" doc:name="Request" doc:id="c21c5c9b-bd73-4a72-8f15-deb9a0850c19" config-ref="HTTP_Request_configuration" path='#["/database/SBFWOa2sno/table/" ++ message.attributes.uriParams.tableName]' responseTimeout="1000"/>
+		<logger level="INFO" doc:name="Logger" doc:id="f4ed5d36-0308-4bce-a3b6-5aa47eceb03a" />
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="d9eb2355-103d-49fa-81b9-70c9125156c7" type="HTTP:BAD_REQUEST" >
+				<ee:transform doc:name="Transform Message" doc:id="b1dd0272-8a1f-473f-89d5-2efff25f2050" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message": error.description
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</on-error-continue>
+		</error-handler>
+	
+</flow></mule>

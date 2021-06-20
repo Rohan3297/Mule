@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:s3="http://www.mulesoft.org/schema/mule/s3" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/s3 http://www.mulesoft.org/schema/mule/s3/current/mule-s3.xsd">
+	<flow name="Get_data" doc:id="62e3a7a4-994a-4248-9859-cb18ec423168" >
+		<s3:get-object doc:name="Get object" doc:id="bd72081a-795b-4f6b-9c37-e935113df2e8" config-ref="Amazon_S3_Configuration" bucketName="filelandingzone" key="order_input.csv"/>
+		<logger level="INFO" doc:name="Logger" doc:id="66a814b7-b90c-47cb-8532-6fd387dbd7a5" message="#[payload]"/>
+		<foreach doc:name="For Each" doc:id="6c6bccbc-e8b7-43bc-a478-3bc7b5c7bd5b" >
+			<ee:transform doc:name="Transform Message" doc:id="7ce2de19-9d99-44ff-bc45-456fb66aafac">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	source: "FILE",
+	orderId: payload[0].OrderID,
+	customerId: payload[0].CustomerID,
+	orderStatus: payload[0].OrderStatus,
+	carrierId: payload[0].CarrierID,
+	orderReceivedDate: payload[0].OrderRecivedDate,
+	orderFulfillmentDate: payload[0].OrderFulfillmentDate,
+	productId: payload[0].Productid,
+	quantity: payload[0].Qty,
+	amount: payload[0].ProductPrice,
+	cDate:now()
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			<logger level="INFO" doc:name="Logger" doc:id="de32f93d-fb9e-4a0a-af4e-6fe6e3db596e" message="#[payload]"/>
+		</foreach>
+	</flow>
+</mule>

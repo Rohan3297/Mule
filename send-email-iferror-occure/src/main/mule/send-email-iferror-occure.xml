@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:email="http://www.mulesoft.org/schema/mule/email"
+	xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="8c900ab5-2efa-4731-aa81-11c4da001b04" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<file:config name="File_Config" doc:name="File Config" doc:id="8d6500e0-ce0b-4fae-8498-c4382b9d1921" >
+		<file:connection workingDir="D:\Batch\csv" />
+	</file:config>
+	<email:smtp-config name="Email_SMTP" doc:name="Email SMTP" doc:id="3497c601-f4bd-452d-ab4e-5fff66167e27" >
+		<email:smtp-connection host="smtp.gmail.com" port="587" user="rohan.naik1997@gmail.com" password="19ikEBRo3">
+			<email:properties >
+				<email:property key="mail.smtp.starttls.enable" value="true" />
+			</email:properties>
+		</email:smtp-connection>
+	</email:smtp-config>
+	<flow name="send-email-iferror-occureFlow" doc:id="a8c6706b-3025-45c7-a75e-e31a3360fe3b" >
+		<http:listener doc:name="Listener" doc:id="0710edd0-81eb-4737-84ba-9fbb1195197b" config-ref="HTTP_Listener_config" path="/file"/>
+		<file:read doc:name="Read order.csv file" doc:id="daf20da5-5a34-4866-b703-417c4c64e515" config-ref="File_Config" path="order.csv" />
+		<scatter-gather doc:name="Scatter-Gather" doc:id="307ab04b-9741-4939-9919-970062b4783c" >
+			<route >
+				<ee:transform doc:name="Transform Message" doc:id="09c2f7c6-0769-46d7-ada7-9d1975933866">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/csv
+---
+payload filter ((item, index) -> (item.Amount < 1))]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+				<email:send doc:name="Send" doc:id="d49e0edb-0971-4e7d-905b-cf2c5bd2cae2" config-ref="Email_SMTP" fromAddress="rohan.naik1997@gmail.com">
+					<email:to-addresses >
+						<email:to-address value="ashleshanalawade14@gmail.com" />
+					</email:to-addresses>
+					<email:body >
+						<email:content ><![CDATA[#["Attached file contains records woth 0 Amount"]]]></email:content>
+					</email:body>
+					<email:attachments ><![CDATA[#[{
+	"order.csv":payload
+}]]]></email:attachments>
+				</email:send>
+				<logger level="INFO" doc:name="Logger" doc:id="086300fa-8b0f-4c61-93ec-5ab86ebd2ee1" message="*********Mail with 0 records**********"/>
+				<set-payload value='#[output application/json
+---
+{
+	message:"send mail with 0 records"
+}]' doc:name="Set Payload" doc:id="1d2f3e74-d910-48a2-90b1-b4212e25f2b0" />
+			</route>
+			<route >
+				<ee:transform doc:name="Transform Message" doc:id="ff5d397b-be0c-4bb9-bd63-3becf03a17fe" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload filter ((item, index) -> (item.Amount > 0))]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<logger level="INFO" doc:name="Logger" doc:id="1feccc14-8207-4356-a1b2-f263c9aae33f" message="#[payload]"/>
+			</route>
+		</scatter-gather>
+		<ee:transform doc:name="Transform Message" doc:id="e0b1ad16-1af6-4731-a3d1-b42789f822c7" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="4b027109-19c7-464c-9e8b-ce1fe270ad11" message="#[payload]"/>
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="073a4def-e659-4cd4-a241-94a54bef50a8" type="FILE:ILLEGAL_PATH">
+				<email:send doc:name="Send" doc:id="a2ee3135-bf9c-4235-aee5-436a26515712" fromAddress="rohan.naik1997@gmail.com" subject="Erroe message" config-ref="Email_SMTP">
+					<email:to-addresses >
+						<email:to-address value="ashleshanalawade14@gmail.com" />
+					</email:to-addresses>
+					<email:body >
+						<email:content ><![CDATA[#["please find attached details"]]]></email:content>
+					</email:body>
+					<email:attachments ><![CDATA[#[{
+	"Attachment.txt" : "There is no file in directory"
+}]]]></email:attachments>
+				</email:send>
+				<logger level="INFO" doc:name="Logger" doc:id="fe498a88-30d1-42e4-bda1-75e91c0b77e6" message="***************send Error mail*************"/>
+			</on-error-continue>
+		</error-handler>
+	</flow>
+</mule>

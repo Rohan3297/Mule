@@ -1,0 +1,26 @@
+#%RAML 1.0
+title: File_eapi
+/files:
+  displayName: order_input file
+  description: Retrives All the Data from file
+  post:
+    responses:
+      201:
+        body:
+          application/json:
+            example: !include examples/Order_example.raml
+      400:
+        body:
+          application/json:
+            example:
+              message:"Bad Request"
+      405:
+        body:
+          application/json:
+            example:
+              message:"Resource not Found" 
+      500:
+        body:
+          application/json:
+            example:
+              message:"Internal Server Error" 

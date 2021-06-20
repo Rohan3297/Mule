@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:tls="http://www.mulesoft.org/schema/mule/tls" xmlns:amqp="http://www.mulesoft.org/schema/mule/amqp"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:jms="http://www.mulesoft.org/schema/mule/jms" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/amqp http://www.mulesoft.org/schema/mule/amqp/current/mule-amqp.xsd
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd">
+	<http:listener-config name="HTTP_Listener_config1" doc:name="HTTP Listener config" doc:id="2625e7cb-e794-4522-a494-0e7ba8b1cac7" >
+		<http:listener-connection host="0.0.0.0" port="8081" connectionIdleTimeout="10" />
+	</http:listener-config>
+	<jms:config name="JMS_Config" doc:name="JMS Config" doc:id="ad9b2064-8a8b-45db-99dc-4e1f944ed6ac" >
+		<jms:active-mq-connection username="admin" password="admin" >
+			<jms:factory-configuration brokerUrl="tcp://localhost:61616" />
+		</jms:active-mq-connection>
+	</jms:config>
+	<flow name="eventPublisher" doc:id="c6ca209f-32c6-46fe-8c6d-f836c1452f79" >
+		<amqp:publish doc:name="PublishToRabbitMQ" doc:id="66a3a38b-08c1-44e6-a53d-832dbba7e1a4" exchangeName="Message" config-ref="AMQP_Config1"/>
+		<logger level="INFO" doc:name="publishedData" doc:id="fcfa0015-0825-4cb7-9afc-6ac02ba487e3" message="#[payload]"/>
+	</flow>
+	<flow name="eventSubscriber" doc:id="b7de3a92-d433-4626-af1a-43036136ede9" >
+		<amqp:listener doc:name="Subscriber" doc:id="7dad3a47-32a1-411e-8f65-4aa7ebf129f0" config-ref="AMQP_Config1" queueName="message"/>
+		<logger level="INFO" doc:name="beforeTransform" doc:id="4c4ac1c2-9dc6-44ee-9442-700615aea9b5" message="#[payload]"/>
+		<ee:transform doc:name="XmlToJson" doc:id="f37d78e7-24e3-41a2-8210-d9bd06baf4d6" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+    source: "JMS",
+    orderId: payload.row.OrderID,
+    customerId: payload.row.CustomerID,
+    orderStatus: payload.row.OrderStatus,
+    carrierId: payload.row.CarrierID,
+    orderReceivedDate: payload.row.OrderRecivedDate as Date {format: 'dd-MM-yyyy'} as String {format: 'yyyy-MM-dd'},
+    orderFulfillmentDate: payload.row.OrderFulfulmentDate as Date {format: 'dd-MM-yyyy'} as String {format: 'yyyy-MM-dd'},
+    productId: payload.row.Productid,
+    quantity: payload.row.Qty,
+    amount:payload.row.ProductPrice   
+    
+ }]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="jsonPayload" doc:id="20ea2e5c-a991-48ba-bfd4-187997c955b1" message="#[payload]"/>
+		<http:request method="POST" doc:name="request to db sapi" doc:id="d33f502c-477c-486c-84ac-de996248654a" config-ref="HTTP_Request_configuration" path="/Order"/>
+		<logger level="INFO" doc:name="afterRequest" doc:id="292a68cb-2001-4dc3-b141-85a09641f7cc" message="sapi hit"/>
+	</flow>
+</mule>

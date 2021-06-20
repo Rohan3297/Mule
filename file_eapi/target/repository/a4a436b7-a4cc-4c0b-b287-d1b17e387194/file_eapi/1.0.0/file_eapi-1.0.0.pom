@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>a4a436b7-a4cc-4c0b-b287-d1b17e387194</groupId>
+  <artifactId>file_eapi</artifactId>
+  <version>1.0.0</version>
+  <packaging>zip</packaging>
+  <description>POM was created from AnypointStudio</description>
+</project>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:tls="http://www.mulesoft.org/schema/mule/tls" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd">
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="a2722e2f-78a9-47b4-bb47-a51eb57e8dea" basePath="${https.baseUrl}">
+		<http:request-connection protocol="HTTPS" host="${https.host}">
+			<tls:context >
+				<tls:key-store type="jks" path="HTTPS-mule.jks" alias="mule" keyPassword="password" password="password" />
+			</tls:context>
+		</http:request-connection>
+	</http:request-config>
+	<configuration-properties doc:name="Configuration properties" doc:id="b142725b-a19d-4306-b76a-59aa988453a8" file="dev.yaml" />
+	<configuration doc:name="Configuration" doc:id="fdf86d58-043f-4e2a-8563-66bb462a5e89" defaultErrorHandler-ref="globalError_Handler" />
+</mule>

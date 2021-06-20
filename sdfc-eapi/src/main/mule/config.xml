@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties" xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns:tls="http://www.mulesoft.org/schema/mule/tls"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd">
+	<configuration-properties doc:name="Configuration properties" doc:id="f7947f55-dd27-459a-b276-4e35671d76fa" file="dev.yaml" />
+	<http:listener-config name="sfdc-eapi-httpListenerConfig" doc:name="sfdc-eapi-httpListenerConfig" doc:id="2d957e44-49e2-4cc9-b9dd-c2bcf555194d" >
+		<http:listener-connection protocol="HTTPS" host="0.0.0.0" port="${https.port}" >
+			<tls:context >
+				<tls:key-store type="jks" path="HTTPS-mule.jks" alias="mule" keyPassword="password" password="password" />
+			</tls:context>
+		</http:listener-connection>
+	</http:listener-config>
+	<salesforce:sfdc-config name="Salesforce_Config" doc:name="Salesforce Config" doc:id="189e3673-0007-4332-aae8-f9b7cb06e07e" >
+		<salesforce:basic-connection username="${sfdc.username}" securityToken="${sfdc.token}" password="${secure::sfdc.password}"/>
+	</salesforce:sfdc-config>
+	<secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="fa8d98c0-ef16-486e-be93-91c4aa2a9153" file="${env}-secure.yaml" key="${key}" >
+		<secure-properties:encrypt algorithm="Blowfish" />
+	</secure-properties:config>
+	<global-property doc:name="Global Property" doc:id="14d96d5c-da70-4f91-806c-2bce70f3c211" name="env" value="dev" />
+	<global-property doc:name="Global Property" doc:id="ebb5f3ec-a6d9-40f7-8754-a6ec847b796d" name="key" value="sfdc123" />
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="25802657-4741-46f6-ae74-01c13636c9f3" basePath="${https.basePath}">
+		<http:request-connection protocol="HTTPS" host="${https.host}">
+			<tls:context >
+				<tls:key-store type="jks" path="HTTPS-mule.mks" alias="mule" keyPassword="password" password="password" />
+			</tls:context>
+		</http:request-connection>
+	</http:request-config>
+</mule>

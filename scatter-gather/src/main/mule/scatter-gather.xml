@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:vm="http://www.mulesoft.org/schema/mule/vm" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd">
+	<file:config name="File_Config" doc:name="File Config" doc:id="9fce3bba-5620-4a06-bd7d-a7bf13aaed05" >
+		<file:connection workingDir="D:\Batch" />
+	</file:config>
+	<file:config name="File_Config1" doc:name="File Config" doc:id="45124fe8-0229-40e3-b276-1cf361b7231d" >
+		<file:connection workingDir="D:\Batch\Target" />
+	</file:config>
+	<flow name="scatter-gatherFlow" doc:id="d5d5a09c-ebea-47c0-8426-cfb57d2849d7" >
+		<file:listener doc:name="On New or Updated File" doc:id="ace32fcd-cfce-413a-887c-d02815a5f0bc" config-ref="File_Config" directory="Source" moveToDirectory="Done">
+			<scheduling-strategy >
+				<fixed-frequency />
+			</scheduling-strategy>
+			<file:matcher />
+		</file:listener>
+		<logger level="INFO" doc:name="Logger" doc:id="d710fa20-dc92-45df-8329-b2fb56eead1e" message="Before SG"/>
+		<scatter-gather doc:name="Separate Order-Input File in Two Files" doc:id="76a168c7-7c37-4053-93d4-349b1808c8a9" >
+			<route >
+				<ee:transform doc:name="Order File CSV to JSON" doc:id="4ead11f0-28a6-490e-a939-2ab2a6d80ef3" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload map ( payload01 , indexOfPayload01 ) -> {
+	 OrderID: payload01.OrderID,
+    CustomerID: payload01.CustomerID,
+    OrderStatus: payload01.OrderStatus,
+    CarrierID: payload01.CarrierID,
+    OrderRecivedDate: payload01.OrderRecivedDate,
+    OrderFulfulmentDate: payload01.OrderFulfulmentDate
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<ee:transform doc:name="JSON to CSV" doc:id="3dba33c5-95a7-4357-8a42-99eb238b0d9c" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/csv
+---
+payload]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<file:write doc:name="Order.csv" doc:id="15a0d013-3712-43e8-bee9-554fea80ade0" config-ref="File_Config1" path="Order.csv"/>
+			</route>
+			<route >
+				<ee:transform doc:name="Item File CSV to JSON" doc:id="0b9c9bc3-a323-463c-a473-e9caeb86d995" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload map ( payload01 , indexOfPayload01 ) -> {
+	 Productid: payload01.Productid,
+     Qty: payload01.Qty,
+     ProductPrice: payload01.ProductPrice
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<ee:transform doc:name="JSON to CSV" doc:id="6f64923c-f91e-465e-a0c9-8c407355e551" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/csv
+---
+payload]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<file:write doc:name="Item.csv" doc:id="3bf1eb28-a581-453b-8a94-2fbaecb1bb5c" config-ref="File_Config1" path="Item.csv"/>
+			</route>
+		</scatter-gather>
+		<logger level="INFO" doc:name="Logger" doc:id="fc51a6c0-c14f-43b6-8543-fc7f8f20e5d4" message="After SG"/>
+	</flow>
+</mule>
